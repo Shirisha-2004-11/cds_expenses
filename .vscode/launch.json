@@ -1,0 +1,93 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+
+        // ── Web (Chrome) — always on port 4200 for Microsoft SSO ───────
+        {
+            "name": "cds_expenses (Chrome)",
+            "request": "launch",
+            "type": "dart",
+            "deviceId": "chrome",
+            "args": ["--web-port", "4200"]
+        },
+        {
+            "name": "cds_expenses (Chrome - profile mode)",
+            "request": "launch",
+            "type": "dart",
+            "deviceId": "chrome",
+            "flutterMode": "profile",
+            "args": ["--web-port", "4200"]
+        },
+        {
+            "name": "cds_expenses (Chrome - release mode)",
+            "request": "launch",
+            "type": "dart",
+            "deviceId": "chrome",
+            "flutterMode": "release",
+            "args": ["--web-port", "4200"]
+        },
+
+        // ── Android ────────────────────────────────────────────────────
+        {
+            "name": "cds_expenses (Android)",
+            "request": "launch",
+            "type": "dart",
+            "deviceId": "android"
+        },
+        {
+            "name": "cds_expenses (Android - profile mode)",
+            "request": "launch",
+            "type": "dart",
+            "deviceId": "android",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "cds_expenses (Android - release mode)",
+            "request": "launch",
+            "type": "dart",
+            "deviceId": "android",
+            "flutterMode": "release"
+        },
+
+        // ── iOS ────────────────────────────────────────────────────────
+        {
+            "name": "cds_expenses (iOS)",
+            "request": "launch",
+            "type": "dart",
+            "deviceId": "ios"
+        },
+        {
+            "name": "cds_expenses (iOS - profile mode)",
+            "request": "launch",
+            "type": "dart",
+            "deviceId": "ios",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "cds_expenses (iOS - release mode)",
+            "request": "launch",
+            "type": "dart",
+            "deviceId": "ios",
+            "flutterMode": "release"
+        },
+
+        // ── Default (auto-detects connected device) ────────────────────
+        {
+            "name": "cds_expenses",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "cds_expenses (profile mode)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "cds_expenses (release mode)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        }
+    ]
+}

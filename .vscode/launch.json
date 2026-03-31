@@ -1,0 +1,98 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+
+    // ── Web Server (Runs Flutter on localhost:4200) ───────
+    {
+      "name": "cds_expenses (Web Server 4200)",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "web-server",
+      "toolArgs": ["--web-port", "4200"]
+    },
+
+    // ── Open Default Browser ───────
+   {
+      "name": "Open Browser (localhost:4200)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:4200"
+    },
+
+    // ── Chrome (Flutter controlled browser) ───────
+    {
+      "name": "cds_expenses (Chrome)",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "chrome",
+      "toolArgs": ["--web-port", "4200"]
+    },
+    {
+      "name": "cds_expenses (Chrome - profile)",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "chrome",
+      "flutterMode": "profile",
+      "toolArgs": ["--web-port", "4200"]
+    },
+    {
+      "name": "cds_expenses (Chrome - release)",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "chrome",
+      "flutterMode": "release",
+      "toolArgs": ["--web-port", "4200"]
+    },
+
+    // ── Android ───────
+    {
+      "name": "cds_expenses (Android)",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "android"
+    },
+    {
+      "name": "cds_expenses (Android - profile)",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "android",
+      "flutterMode": "profile"
+    },
+    {
+      "name": "cds_expenses (Android - release)",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "android",
+      "flutterMode": "release"
+    },
+
+    // ── iOS ───────
+    {
+      "name": "cds_expenses (iOS)",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "ios"
+    },
+    {
+      "name": "cds_expenses (iOS - profile)",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "ios",
+      "flutterMode": "profile"
+    },
+    {
+      "name": "cds_expenses (iOS - release)",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "ios",
+      "flutterMode": "release"
+    },
+
+    // ── Default ───────
+    {
+      "name": "cds_expenses (auto)",
+      "request": "launch",
+      "type": "dart"
+    }
+  ]
+}

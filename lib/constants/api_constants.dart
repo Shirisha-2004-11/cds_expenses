@@ -12,6 +12,7 @@ class ApiConstants {
   static const String refreshToken = '$baseUrl/auth/refresh';
   static const String logout = '$baseUrl/auth/logout';
   static const String microsoftAuth = '$baseUrl/auth/microsoft';
+  
 
   // ─── Microsoft SSO ────────────────────────────────────────
   static const String microsoftClientId = '5efbf251-d5bb-4595-97b4-9c7ddc661d1e';

@@ -45,8 +45,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final double maxWidth =
-                constraints.maxWidth > 480 ? 400 : constraints.maxWidth;
+            final double maxWidth = constraints.maxWidth > 480
+                ? 400
+                : constraints.maxWidth;
 
             return Center(
               child: SizedBox(
@@ -132,9 +133,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 class _CovalenseLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return SvgPicture.asset(
-      'assets/images/covalense_logo.svg',
-      height: 100,
-    );
+    return SvgPicture.asset('assets/images/covalense_logo.svg', height: 100);
   }
 }

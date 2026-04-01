@@ -6,9 +6,9 @@ import '../models/auth_model.dart';
 class AuthService {
   // ─── Common headers ───────────────────────────────────────
   static Map<String, String> get _headers => {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      };
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
 
   // ─── Sign In ──────────────────────────────────────────────
   // POST http://192.168.182.180:8081/auth/login
@@ -22,21 +22,21 @@ class AuthService {
           .post(
             Uri.parse(ApiConstants.signIn),
             headers: _headers,
-            body: jsonEncode({
-              'email': email,
-              'password': password,
-            }),
+            body: jsonEncode({'email': email, 'password': password}),
           )
           .timeout(const Duration(seconds: 30));
 
       final data = jsonDecode(response.body);
+      print(" LOGIN RESPONSE: ${response.body}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return AuthResponse.fromJson(data);
       } else if (response.statusCode == 401) {
         throw AuthException(message: 'Invalid email or password.');
       } else if (response.statusCode == 404) {
-        throw AuthException(message: 'Account not found. Please sign up first.');
+        throw AuthException(
+          message: 'Account not found. Please sign up first.',
+        );
       } else {
         throw AuthException(
           message: data['message'] ?? data['error'] ?? 'Sign in failed.',
@@ -47,7 +47,8 @@ class AuthService {
       rethrow;
     } catch (e) {
       throw AuthException(
-        message: 'Cannot connect to server. Make sure you are on the same network.',
+        message:
+            'Cannot connect to server. Make sure you are on the same network.',
       );
     }
   }
@@ -78,7 +79,9 @@ class AuthService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return AuthResponse.fromJson(data);
       } else if (response.statusCode == 409) {
-        throw AuthException(message: 'An account with this email already exists.');
+        throw AuthException(
+          message: 'An account with this email already exists.',
+        );
       } else {
         throw AuthException(
           message: data['message'] ?? data['error'] ?? 'Sign up failed.',
@@ -89,7 +92,8 @@ class AuthService {
       rethrow;
     } catch (e) {
       throw AuthException(
-        message: 'Cannot connect to server. Make sure you are on the same network.',
+        message:
+            'Cannot connect to server. Make sure you are on the same network.',
       );
     }
   }
@@ -118,7 +122,8 @@ class AuthService {
       rethrow;
     } catch (e) {
       throw AuthException(
-        message: 'Cannot connect to server. Make sure you are on the same network.',
+        message:
+            'Cannot connect to server. Make sure you are on the same network.',
       );
     }
   }

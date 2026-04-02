@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../constants/app_colors.dart';
-import '../../constants/app_text_styles.dart';
+import '../../colors/app_colors.dart';
+import '../../fonts/app_text_styles.dart';
 
 class CustomTextField extends StatefulWidget {
   final String label;
@@ -13,6 +13,7 @@ class CustomTextField extends StatefulWidget {
   final bool enabled;
   final TextInputAction textInputAction;
   final VoidCallback? onEditingComplete;
+  final ValueChanged<String>? onChanged; // ← ADDED
 
   const CustomTextField({
     super.key,
@@ -26,6 +27,7 @@ class CustomTextField extends StatefulWidget {
     this.enabled = true,
     this.textInputAction = TextInputAction.next,
     this.onEditingComplete,
+    this.onChanged, // ← ADDED
   });
 
   @override
@@ -50,6 +52,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
           enabled: widget.enabled,
           textInputAction: widget.textInputAction,
           onEditingComplete: widget.onEditingComplete,
+          onChanged: widget.onChanged, // ← ADDED
           style: AppTextStyles.body.copyWith(color: AppColors.textDark),
           decoration: InputDecoration(
             hintText: widget.hint,
@@ -58,11 +61,14 @@ class _CustomTextFieldState extends State<CustomTextField> {
             suffixIcon: widget.isPassword
                 ? IconButton(
                     icon: Icon(
-                      _obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                      _obscureText
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
                       color: AppColors.textMedium,
                       size: 20,
                     ),
-                    onPressed: () => setState(() => _obscureText = !_obscureText),
+                    onPressed: () =>
+                        setState(() => _obscureText = !_obscureText),
                   )
                 : null,
           ),

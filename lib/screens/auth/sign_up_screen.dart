@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../constants/app_colors.dart';
+import '../../colors/app_colors.dart';
 import '../../constants/app_strings.dart';
-import '../../constants/app_text_styles.dart';
+import '../../fonts/app_text_styles.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/primary_button.dart';
@@ -22,8 +22,48 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+
+  final _fullNameFocusNode = FocusNode();
+  final _emailFocusNode = FocusNode();
+  final _passwordFocusNode = FocusNode();
+  final _confirmPasswordFocusNode = FocusNode();
+
   final _authService = AuthService();
   bool _isLoading = false;
+
+  bool _fullNameTouched = false;
+  bool _emailTouched = false;
+  bool _passwordTouched = false;
+  bool _confirmPasswordTouched = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fullNameFocusNode.addListener(() {
+      if (!_fullNameFocusNode.hasFocus && _fullNameController.text.isNotEmpty) {
+        setState(() => _fullNameTouched = true);
+        _formKey.currentState?.validate();
+      }
+    });
+    _emailFocusNode.addListener(() {
+      if (!_emailFocusNode.hasFocus && _emailController.text.isNotEmpty) {
+        setState(() => _emailTouched = true);
+        _formKey.currentState?.validate();
+      }
+    });
+    _passwordFocusNode.addListener(() {
+      if (!_passwordFocusNode.hasFocus && _passwordController.text.isNotEmpty) {
+        setState(() => _passwordTouched = true);
+        _formKey.currentState?.validate();
+      }
+    });
+    _confirmPasswordFocusNode.addListener(() {
+      if (!_confirmPasswordFocusNode.hasFocus && _confirmPasswordController.text.isNotEmpty) {
+        setState(() => _confirmPasswordTouched = true);
+        _formKey.currentState?.validate();
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -31,10 +71,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _fullNameFocusNode.dispose();
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
+    _confirmPasswordFocusNode.dispose();
     super.dispose();
   }
 
   Future<void> _handleSignUp() async {
+    setState(() {
+      _fullNameTouched = true;
+      _emailTouched = true;
+      _passwordTouched = true;
+      _confirmPasswordTouched = true;
+    });
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
@@ -46,15 +96,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
         password: _passwordController.text,
       );
 
-      // Save token
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('auth_token', response.token);
       await prefs.setString('user_email', response.user.email);
       await prefs.setString('user_name', response.user.fullName);
 
       if (mounted) {
-        /// TODO: Navigate to Dashboard screen
-       Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => DashboardScreen()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => DashboardScreen()));
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Account created successfully!'),
@@ -89,7 +137,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final double maxWidth = constraints.maxWidth > 480 ? 400 : constraints.maxWidth;
-
             return Center(
               child: SizedBox(
                 width: maxWidth,
@@ -101,14 +148,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 16),
-
                         Text(AppStrings.createAccount, style: AppTextStyles.heading1),
                         const SizedBox(height: 8),
                         Text(
                           AppStrings.signUpSubtitle,
                           style: AppTextStyles.body.copyWith(color: AppColors.textMedium),
                         ),
-
                         const SizedBox(height: 36),
 
                         // Full Name
@@ -116,9 +161,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           label: AppStrings.fullNameLabel,
                           hint: AppStrings.fullNameHint,
                           controller: _fullNameController,
+                          // focusNode: _fullNameFocusNode,
                           keyboardType: TextInputType.name,
                           prefixIcon: const Icon(Icons.person_outline, color: AppColors.textMedium, size: 20),
-                          validator: (v) => (v == null || v.isEmpty) ? AppStrings.fieldRequired : null,
+                          validator: _fullNameTouched
+                              ? (v) => (v == null || v.isEmpty) ? AppStrings.fieldRequired : null
+                              : null,
                         ),
 
                         const SizedBox(height: 20),
@@ -128,15 +176,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           label: AppStrings.emailLabel,
                           hint: AppStrings.emailHint,
                           controller: _emailController,
+                          // focusNode: _emailFocusNode,
                           keyboardType: TextInputType.emailAddress,
                           prefixIcon: const Icon(Icons.email_outlined, color: AppColors.textMedium, size: 20),
-                          validator: (v) {
-                            if (v == null || v.isEmpty) return AppStrings.fieldRequired;
-                            if (!RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,}$').hasMatch(v)) {
-                              return AppStrings.invalidEmail;
-                            }
-                            return null;
-                          },
+                          validator: _emailTouched
+                              ? (v) {
+                                  if (v == null || v.isEmpty) return AppStrings.fieldRequired;
+                                  if (!RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,}$').hasMatch(v)) {
+                                    return AppStrings.invalidEmail;
+                                  }
+                                  return null;
+                                }
+                              : null,
                         ),
 
                         const SizedBox(height: 20),
@@ -146,13 +197,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           label: AppStrings.passwordLabel,
                           hint: AppStrings.passwordHint,
                           controller: _passwordController,
+                          // focusNode: _passwordFocusNode,
                           isPassword: true,
                           prefixIcon: const Icon(Icons.lock_outline, color: AppColors.textMedium, size: 20),
-                          validator: (v) {
-                            if (v == null || v.isEmpty) return AppStrings.fieldRequired;
-                            if (v.length < 8) return AppStrings.passwordTooShort;
-                            return null;
-                          },
+                          validator: _passwordTouched
+                              ? (v) {
+                                  if (v == null || v.isEmpty) return AppStrings.fieldRequired;
+                                  if (v.length < 8) return AppStrings.passwordTooShort;
+                                  return null;
+                                }
+                              : null,
                         ),
 
                         const SizedBox(height: 20),
@@ -162,20 +216,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           label: AppStrings.confirmPasswordLabel,
                           hint: AppStrings.confirmPasswordHint,
                           controller: _confirmPasswordController,
+                          // focusNode: _confirmPasswordFocusNode,
                           isPassword: true,
                           prefixIcon: const Icon(Icons.lock_outline, color: AppColors.textMedium, size: 20),
                           textInputAction: TextInputAction.done,
                           onEditingComplete: _handleSignUp,
-                          validator: (v) {
-                            if (v == null || v.isEmpty) return AppStrings.fieldRequired;
-                            if (v != _passwordController.text) return AppStrings.passwordsDoNotMatch;
-                            return null;
-                          },
+                          validator: _confirmPasswordTouched
+                              ? (v) {
+                                  if (v == null || v.isEmpty) return AppStrings.fieldRequired;
+                                  if (v != _passwordController.text) return AppStrings.passwordsDoNotMatch;
+                                  return null;
+                                }
+                              : null,
                         ),
 
                         const SizedBox(height: 32),
 
-                        // Sign Up button
                         PrimaryButton(
                           label: AppStrings.signUp,
                           isLoading: _isLoading,
@@ -184,7 +240,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                         const SizedBox(height: 24),
 
-                        // Sign in link
                         Center(
                           child: RichText(
                             text: TextSpan(
@@ -210,7 +265,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             ),
                           ),
                         ),
-
                         const SizedBox(height: 32),
                       ],
                     ),

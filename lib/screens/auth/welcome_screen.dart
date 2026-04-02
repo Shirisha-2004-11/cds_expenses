@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import '../../constants/app_colors.dart';
+import '../../colors/app_colors.dart';
 import '../../constants/app_strings.dart';
 import '../../widgets/common/primary_button.dart';
 import '../../widgets/common/outlined_primary_button.dart';

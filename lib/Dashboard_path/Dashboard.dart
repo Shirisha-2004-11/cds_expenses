@@ -1,13 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// lib/screens/dashboard_screen.dart  (updated — API-connected version)
-//
-// Replace your existing DashboardScreen with this file.
-// The ONLY changes from your original are:
-//   1. State now holds DashboardData (loaded from API)
-//   2. initState() calls DashboardService.fetchAll()
-//   3. A loading spinner shows while data loads
-//   4. All hardcoded lists replaced with data from the model
-// Everything else (UI, painters, navigation) is identical to your original.
+// lib/screens/dashboard_screen.dart
 // ─────────────────────────────────────────────────────────────────────────────
 
 import 'package:flutter/material.dart';
@@ -18,7 +10,8 @@ import 'monthly_progress.dart';
 import 'ExpenseScreen.dart';
 import 'Expenses_History.dart';
 import 'InsightsCards.dart';
-import '../services/dashboard_service.dart';   // ← new import
+import 'profile_screen.dart';                        // ← added
+import '../services/dashboard_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -31,9 +24,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int    _currentNavIndex = 0;
   String selectedPeriod   = 'This year';
 
-  // ── API state ─────────────────────────────────────────────────────────────
   bool          _loading = true;
-  DashboardData _data    = DashboardData.mock(); // starts with mock so UI never breaks
+  DashboardData _data    = DashboardData.mock();
 
   @override
   void initState() {
@@ -51,7 +43,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  // ── Convenience getters (replaces your old hardcoded fields) ─────────────
   double get totalBudget => _data.budget.totalBudget;
   double get totalSpent  => _data.budget.totalSpent;
 
@@ -74,14 +65,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<double> get dailyData => _data.chartData.values;
   List<String> get days      => _data.chartData.days;
 
-  // ─────────────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FC),
       body: SafeArea(
         child: _loading
-            ? const Center(child: CircularProgressIndicator())   // ← loading state
+            ? const Center(child: CircularProgressIndicator())
             : _currentNavIndex == 0
                 ? _buildHomeBody()
                 : _buildPlaceholderPage(_currentNavIndex),
@@ -101,9 +91,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
           currentIndex: _currentNavIndex,
           onTap: (index) {
             if (index == 1) {
+              // Add expense page — push without changing nav index
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const AddExpensePage()),
+              );
+            } else if (index == 2) {
+              // ── Navigate to ProfileScreen ──────────────────────────────
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ProfileScreen()),
               );
             } else {
               setState(() => _currentNavIndex = index);
@@ -147,7 +144,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildHomeBody() {
-    return RefreshIndicator(                          // ← pull-to-refresh
+    return RefreshIndicator(
       onRefresh: _loadData,
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -178,7 +175,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildInsightsCard() {
     final total = insights.fold<double>(
         0, (sum, e) => sum + (e['amount'] as int));
-    return Container(
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const SpendingInsightsScreen()),
+      ),
+      child: Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -270,21 +272,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          Center(
-            child: TextButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => const SpendingInsightsScreen()),
-              ),
-              child: const Text('View report',
-                  style:
-                      TextStyle(color: Color(0xFF4A90D9), fontSize: 13)),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Text('View report',
+                  style: TextStyle(color: Color(0xFF4A90D9), fontSize: 13)),
+              SizedBox(width: 4),
+              Icon(Icons.arrow_forward_ios, size: 12, color: Color(0xFF4A90D9)),
+            ],
           ),
         ],
       ),
-    );
+    ),  // closes Container
+    ); // closes GestureDetector
   }
 
   Widget _buildRecentExpenses() {
@@ -403,6 +403,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // This is now only used for index 0 fallback — index 2 navigates to ProfileScreen
   Widget _buildPlaceholderPage(int index) {
     const titles = ['', '', 'Profile'];
     const icons  = [Icons.home, Icons.add_circle, Icons.person];
@@ -426,7 +427,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
-// ── Custom Painters (unchanged from your original) ────────────────────────────
+// ── Custom Painters ───────────────────────────────────────────────────────────
 
 class BarChartPainter extends CustomPainter {
   final List<double> data;
@@ -436,10 +437,10 @@ class BarChartPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (data.isEmpty) return;
-    final double maxVal     = data.reduce((a, b) => a > b ? a : b);
+    final double maxVal      = data.reduce((a, b) => a > b ? a : b);
     final double chartHeight = size.height - 18;
-    final double barWidth   = size.width / (data.length * 1.8);
-    final double spacing    = size.width / data.length;
+    final double barWidth    = size.width / (data.length * 1.8);
+    final double spacing     = size.width / data.length;
     final colors = [
       const Color(0xFF81C784), const Color(0xFF4FC3F7),
       const Color(0xFFFFB347), const Color(0xFFCE93D8),
@@ -493,10 +494,10 @@ class DonutChartPainter extends CustomPainter {
         sweepAngle - 0.05,
         false,
         Paint()
-          ..color      = colors[i]
+          ..color       = colors[i]
           ..strokeWidth = strokeWidth
-          ..style      = PaintingStyle.stroke
-          ..strokeCap  = StrokeCap.round,
+          ..style       = PaintingStyle.stroke
+          ..strokeCap   = StrokeCap.round,
       );
       startAngle += sweepAngle;
     }

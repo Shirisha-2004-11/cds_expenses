@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../constants/app_colors.dart';
+import '../../colors/app_colors.dart';
 import '../../constants/app_strings.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/common/custom_text_field.dart';

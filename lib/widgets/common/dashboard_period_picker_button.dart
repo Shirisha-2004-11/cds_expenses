@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../theme/dashboard_colors.dart';
-import '../../theme/dashboard_text_styles.dart';
+import '../../colors/dashboard_colors.dart';
+import '../../fonts/dashboard_text_styles.dart';
 
 /// Small pill button showing the currently selected period (e.g. "Last 30 days")
 /// with a dropdown arrow — used in both MonthlyAnalyticsCard and Expenses_History.

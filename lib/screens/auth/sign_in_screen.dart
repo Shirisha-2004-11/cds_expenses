@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../constants/app_colors.dart';
+import '../../colors/app_colors.dart';
 import '../../constants/app_strings.dart';
-import '../../constants/app_text_styles.dart';
+import '../../fonts/app_text_styles.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/primary_button.dart';
 import 'sign_up_screen.dart';
 import 'forgot_password_screen.dart';
 import '../../Dashboard_path/Dashboard.dart';
-
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -24,6 +23,8 @@ class _SignInScreenState extends State<SignInScreen> {
   final _passwordController = TextEditingController();
   final _authService = AuthService();
   bool _isLoading = false;
+  bool _emailTouched = false;
+  bool _passwordTouched = false;
 
   @override
   void dispose() {
@@ -33,6 +34,10 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   Future<void> _handleSignIn() async {
+    setState(() {
+      _emailTouched = true;
+      _passwordTouched = true;
+    });
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
@@ -43,15 +48,14 @@ class _SignInScreenState extends State<SignInScreen> {
         password: _passwordController.text,
       );
 
-      // Save token to local storage
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('auth_token', response.token);
       await prefs.setString('user_email', response.user.email);
       await prefs.setString('user_name', response.user.fullName);
 
       if (mounted) {
-        // TODO: Navigate to Dashboard screen
-       Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => DashboardScreen()));
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (_) => DashboardScreen()));
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Signed in successfully!'),
@@ -62,10 +66,7 @@ class _SignInScreenState extends State<SignInScreen> {
     } on AuthException catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.message),
-            backgroundColor: AppColors.error,
-          ),
+          SnackBar(content: Text(e.message), backgroundColor: AppColors.error),
         );
       }
     } finally {
@@ -81,15 +82,16 @@ class _SignInScreenState extends State<SignInScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.textDark, size: 20),
+          icon: const Icon(Icons.arrow_back_ios,
+              color: AppColors.textDark, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final double maxWidth = constraints.maxWidth > 480 ? 400 : constraints.maxWidth;
-
+            final double maxWidth =
+                constraints.maxWidth > 480 ? 400 : constraints.maxWidth;
             return Center(
               child: SizedBox(
                 width: maxWidth,
@@ -101,15 +103,14 @@ class _SignInScreenState extends State<SignInScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 16),
-
-                        // Title
-                        Text(AppStrings.welcomeBack, style: AppTextStyles.heading1),
+                        Text(AppStrings.welcomeBack,
+                            style: AppTextStyles.heading1),
                         const SizedBox(height: 8),
                         Text(
                           AppStrings.signInSubtitle,
-                          style: AppTextStyles.body.copyWith(color: AppColors.textMedium),
+                          style: AppTextStyles.body
+                              .copyWith(color: AppColors.textMedium),
                         ),
-
                         const SizedBox(height: 40),
 
                         // Email field
@@ -118,15 +119,29 @@ class _SignInScreenState extends State<SignInScreen> {
                           hint: AppStrings.emailHint,
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
-                          prefixIcon: const Icon(Icons.email_outlined, color: AppColors.textMedium, size: 20),
+                          prefixIcon: const Icon(Icons.email_outlined,
+                              color: AppColors.textMedium, size: 20),
                           textInputAction: TextInputAction.next,
-                          validator: (v) {
-                            if (v == null || v.isEmpty) return AppStrings.fieldRequired;
-                            if (!RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,}$').hasMatch(v)) {
-                              return AppStrings.invalidEmail;
+                          onChanged: (v) {
+                            // Mark touched as soon as user starts typing
+                            if (!_emailTouched) {
+                              setState(() => _emailTouched = true);
                             }
-                            return null;
+                            // Trigger live validation
+                            _formKey.currentState?.validate();
                           },
+                          validator: _emailTouched
+                              ? (v) {
+                                  if (v == null || v.isEmpty) {
+                                    return AppStrings.fieldRequired;
+                                  }
+                                  if (!RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,}$')
+                                      .hasMatch(v)) {
+                                    return AppStrings.invalidEmail;
+                                  }
+                                  return null;
+                                }
+                              : null,
                         ),
 
                         const SizedBox(height: 20),
@@ -137,14 +152,27 @@ class _SignInScreenState extends State<SignInScreen> {
                           hint: AppStrings.passwordHint,
                           controller: _passwordController,
                           isPassword: true,
-                          prefixIcon: const Icon(Icons.lock_outline, color: AppColors.textMedium, size: 20),
+                          prefixIcon: const Icon(Icons.lock_outline,
+                              color: AppColors.textMedium, size: 20),
                           textInputAction: TextInputAction.done,
                           onEditingComplete: _handleSignIn,
-                          validator: (v) {
-                            if (v == null || v.isEmpty) return AppStrings.fieldRequired;
-                            if (v.length < 8) return AppStrings.passwordTooShort;
-                            return null;
+                          onChanged: (v) {
+                            if (!_passwordTouched) {
+                              setState(() => _passwordTouched = true);
+                            }
+                            _formKey.currentState?.validate();
                           },
+                          validator: _passwordTouched
+                              ? (v) {
+                                  if (v == null || v.isEmpty) {
+                                    return AppStrings.fieldRequired;
+                                  }
+                                  if (v.length < 8) {
+                                    return AppStrings.passwordTooShort;
+                                  }
+                                  return null;
+                                }
+                              : null,
                         ),
 
                         const SizedBox(height: 12),
@@ -157,8 +185,8 @@ class _SignInScreenState extends State<SignInScreen> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => const ForgotPasswordScreen(),
-                                ),
+                                    builder: (_) =>
+                                        const ForgotPasswordScreen()),
                               );
                             },
                             child: Text(
@@ -173,7 +201,6 @@ class _SignInScreenState extends State<SignInScreen> {
 
                         const SizedBox(height: 24),
 
-                        // Sign In button
                         PrimaryButton(
                           label: AppStrings.signIn,
                           isLoading: _isLoading,
@@ -182,18 +209,19 @@ class _SignInScreenState extends State<SignInScreen> {
 
                         const SizedBox(height: 32),
 
-                        // Sign up link
                         Center(
                           child: RichText(
                             text: TextSpan(
                               text: AppStrings.dontHaveAccount,
-                              style: AppTextStyles.body.copyWith(color: AppColors.textMedium),
+                              style: AppTextStyles.body
+                                  .copyWith(color: AppColors.textMedium),
                               children: [
                                 WidgetSpan(
                                   child: GestureDetector(
                                     onTap: () => Navigator.pushReplacement(
                                       context,
-                                      MaterialPageRoute(builder: (_) => const SignUpScreen()),
+                                      MaterialPageRoute(
+                                          builder: (_) => const SignUpScreen()),
                                     ),
                                     child: Text(
                                       AppStrings.signUpLink,
@@ -208,7 +236,6 @@ class _SignInScreenState extends State<SignInScreen> {
                             ),
                           ),
                         ),
-
                         const SizedBox(height: 32),
                       ],
                     ),

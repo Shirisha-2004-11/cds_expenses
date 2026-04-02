@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // ── Centralised theme tokens ─────────────────────────────────────────────────
 // ignore: unused_import
-import '../theme/dashboard_colors.dart';
+import '../colors/dashboard_colors.dart';
 // ignore: unused_import
-import '../theme/dashboard_text_styles.dart';
+import '../fonts/dashboard_text_styles.dart';
 // ignore: unused_import
 import '../widgets/common/dashboard_icon_box.dart';
 

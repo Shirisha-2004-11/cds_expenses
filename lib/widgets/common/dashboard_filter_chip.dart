@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../theme/dashboard_colors.dart';
-import '../../theme/dashboard_text_styles.dart';
+import '../../colors/dashboard_colors.dart';
+import '../../fonts/dashboard_text_styles.dart';
 
 /// Animated pill-shaped filter chip used in Expenses_History and similar lists.
 class DashboardFilterChip extends StatelessWidget {

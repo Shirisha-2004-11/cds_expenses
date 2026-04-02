@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../constants/app_colors.dart';
-import '../../constants/app_text_styles.dart';
+import '../../colors/app_colors.dart';
+import '../../fonts/app_text_styles.dart';
 import '../../constants/app_strings.dart';
 
 class MicrosoftButton extends StatelessWidget {

@@ -2,7 +2,7 @@ class ApiConstants {
   // ─── Base URL ────────────────────────────────────────────
   static const String baseUrl = 'http://192.168.182.180:8081';
 
-  // TODO: Replace with production URL before going live
+  // Replace with production URL before going live
   // static const String baseUrl = 'https://api.covalense.com';
 
   // ─── Auth endpoints ───────────────────────────────────────

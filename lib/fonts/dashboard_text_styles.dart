@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dashboard_colors.dart';
+import '../colors/dashboard_colors.dart';
 
 /// All TextStyle definitions used across Dashboard_path screens.
 /// Centralises font-family (Poppins), font sizes, weights and colors.

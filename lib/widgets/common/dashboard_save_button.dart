@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../theme/dashboard_colors.dart';
-import '../../theme/dashboard_text_styles.dart';
+import '../../colors/dashboard_colors.dart';
+import '../../fonts/dashboard_text_styles.dart';
 
 /// The full-width "Save Expense" button used at the bottom of AddExpensePage.
 class DashboardSaveButton extends StatelessWidget {

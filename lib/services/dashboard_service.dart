@@ -5,7 +5,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import '../constants/api_config.dart'; // ← centralised URLs + auth headers
+import '../constants/api_config.dart';
 
 // ─── Models ───────────────────────────────────────────────────────────────────
 
@@ -51,21 +51,21 @@ class InsightItem {
   }
 
   static List<InsightItem> mockList() => [
-    InsightItem(label: 'Food', amount: 12400, color: const Color(0xFFFF6B6B)),
-    InsightItem(label: 'Travel', amount: 8200, color: const Color(0xFF4FC3F7)),
-    InsightItem(label: 'Supplies', amount: 6800, color: const Color(0xFF81C784)),
-    InsightItem(label: 'Bills', amount: 5000, color: const Color(0xFFFFB347)),
+    InsightItem(label: 'Food',     amount: 12400, color: const Color(0xFFFF6B6B)),
+    InsightItem(label: 'Travel',   amount: 8200,  color: const Color(0xFF4FC3F7)),
+    InsightItem(label: 'Supplies', amount: 6800,  color: const Color(0xFF81C784)),
+    InsightItem(label: 'Bills',    amount: 5000,  color: const Color(0xFFFFB347)),
   ];
 }
 
 class ExpenseItem {
-  final String category;
-  final String date;
-  final String subtitle;
-  final int amount;
+  final String   category;
+  final String   date;
+  final String   subtitle;
+  final int      amount;
   final IconData icon;
-  final Color color;
-  final bool highlight;
+  final Color    color;
+  final bool     highlight;
 
   ExpenseItem({
     required this.category,
@@ -80,51 +80,62 @@ class ExpenseItem {
   factory ExpenseItem.fromJson(Map<String, dynamic> j) {
     final cat = (j['category'] ?? j['merchant'] ?? 'Other').toString();
     return ExpenseItem(
-      category: cat,
-      date: j['date'] ?? j['expenseDate'] ?? '',
-      subtitle: j['description'] ?? j['subtitle'] ?? '',
-      amount: (j['amount'] ?? 0).toInt(),
-      icon: _iconFor(cat),
-      color: _colorFor(cat),
-      highlight: j['highlight'] ?? false,
+      category:  cat,
+      date:      j['date']        ?? j['expenseDate'] ?? '',
+      subtitle:  j['description'] ?? j['subtitle']    ?? '',
+      amount:    (j['amount'] ?? 0).toInt(),
+      icon:      _iconFor(cat),
+      color:     _colorFor(cat),
+      highlight: j['highlight']   ?? false,
     );
   }
 
+  // ── Fixed: every if-branch now has curly braces ───────────────────────────
   static IconData _iconFor(String cat) {
     final c = cat.toLowerCase();
-    if (c.contains('food') || c.contains('swiggy') || c.contains('zomato'))
+    if (c.contains('food') || c.contains('swiggy') || c.contains('zomato')) {
       return Icons.fastfood;
-    if (c.contains('travel') || c.contains('uber') || c.contains('ola'))
+    }
+    if (c.contains('travel') || c.contains('uber') || c.contains('ola')) {
       return Icons.directions_car;
-    if (c.contains('bill') || c.contains('electric')) return Icons.receipt_long;
+    }
+    if (c.contains('bill') || c.contains('electric')) {
+      return Icons.receipt_long;
+    }
     return Icons.shopping_bag;
   }
 
   static Color _colorFor(String cat) {
     final c = cat.toLowerCase();
-    if (c.contains('food')) return const Color(0xFFFF6B6B);
-    if (c.contains('travel')) return const Color(0xFF4FC3F7);
-    if (c.contains('bill')) return const Color(0xFFFFB347);
+    if (c.contains('food')) {
+      return const Color(0xFFFF6B6B);
+    }
+    if (c.contains('travel')) {
+      return const Color(0xFF4FC3F7);
+    }
+    if (c.contains('bill')) {
+      return const Color(0xFFFFB347);
+    }
     return const Color(0xFF81C784);
   }
 
   static List<ExpenseItem> mockList() => [
     ExpenseItem(
-      category: 'Swiggy',
-      date: 'Today',
-      subtitle: 'Food delivery',
-      amount: 450,
-      icon: Icons.fastfood,
-      color: const Color(0xFFFF6B6B),
+      category:  'Swiggy',
+      date:      'Today',
+      subtitle:  'Food delivery',
+      amount:    450,
+      icon:      Icons.fastfood,
+      color:     const Color(0xFFFF6B6B),
       highlight: true,
     ),
     ExpenseItem(
-      category: 'Uber',
-      date: 'Yesterday',
-      subtitle: 'Cab ride',
-      amount: 220,
-      icon: Icons.directions_car,
-      color: const Color(0xFF4FC3F7),
+      category:  'Uber',
+      date:      'Yesterday',
+      subtitle:  'Cab ride',
+      amount:    220,
+      icon:      Icons.directions_car,
+      color:     const Color(0xFF4FC3F7),
       highlight: false,
     ),
   ];
@@ -136,7 +147,6 @@ class ChartData {
   ChartData({required this.values, required this.days});
 
   factory ChartData.fromJson(List<dynamic> json) {
-    // ← Fixed: explicit cast to List<double> and List<String>
     final values = json
         .map((e) => (e['amount'] ?? e['value'] ?? 0).toDouble())
         .toList()
@@ -150,15 +160,15 @@ class ChartData {
 
   factory ChartData.mock() => ChartData(
     values: [3200, 4100, 2800, 5200, 3800, 4600, 3100, 5800, 4200],
-    days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Mon', 'Tue'],
+    days:   ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Mon', 'Tue'],
   );
 }
 
 class DashboardData {
-  final BudgetSummary budget;
-  final List<InsightItem> insights;
-  final List<ExpenseItem> recentExpenses;
-  final ChartData chartData;
+  final BudgetSummary      budget;
+  final List<InsightItem>  insights;
+  final List<ExpenseItem>  recentExpenses;
+  final ChartData          chartData;
 
   DashboardData({
     required this.budget,
@@ -168,10 +178,10 @@ class DashboardData {
   });
 
   factory DashboardData.mock() => DashboardData(
-    budget: BudgetSummary.mock(),
-    insights: InsightItem.mockList(),
+    budget:         BudgetSummary.mock(),
+    insights:       InsightItem.mockList(),
     recentExpenses: ExpenseItem.mockList(),
-    chartData: ChartData.mock(),
+    chartData:      ChartData.mock(),
   );
 }
 
@@ -183,26 +193,26 @@ class DashboardService {
       final headers = await ApiConfig.authHeaders;
 
       final results = await Future.wait([
-        _get(ApiConfig.budgetSummary, headers),
-        _get(ApiConfig.insights, headers),
-        _get(ApiConfig.recentExpenses, headers),
-        _get(ApiConfig.dailyChart, headers),
+        _get(ApiConfig.budgetSummary,   headers),
+        _get(ApiConfig.insights,        headers),
+        _get(ApiConfig.recentExpenses,  headers),
+        _get(ApiConfig.dailyChart,      headers),
       ]);
 
-      final budget = BudgetSummary.fromJson(results[0] as Map<String, dynamic>);
+      final budget  = BudgetSummary.fromJson(results[0] as Map<String, dynamic>);
       final insight = (results[1] as List)
           .map((e) => InsightItem.fromJson(e))
           .toList();
-      final recent = (results[2] as List)
+      final recent  = (results[2] as List)
           .map((e) => ExpenseItem.fromJson(e))
           .toList();
-      final chart = ChartData.fromJson(results[3] as List);
+      final chart   = ChartData.fromJson(results[3] as List);
 
       return DashboardData(
-        budget: budget,
-        insights: insight,
+        budget:         budget,
+        insights:       insight,
         recentExpenses: recent,
-        chartData: chart,
+        chartData:      chart,
       );
     } catch (e) {
       debugPrint('DashboardService.fetchAll error: $e');

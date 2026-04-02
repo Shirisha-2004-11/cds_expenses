@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../theme/dashboard_colors.dart';
+import '../../colors/dashboard_colors.dart';
 
 /// A generic rounded white card used throughout the Dashboard screens.
 /// Wraps [child] with consistent padding, border-radius and drop-shadow.

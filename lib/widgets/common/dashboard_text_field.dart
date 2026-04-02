@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../theme/dashboard_colors.dart';
+import '../../colors/dashboard_colors.dart';
 // ignore: unused_import
-import '../../theme/dashboard_text_styles.dart';
+import '../../fonts/dashboard_text_styles.dart';
 
 /// A bordered, rounded text input field used across Dashboard screens
 /// (date, note, merchant etc.).

@@ -7,29 +7,33 @@ class SpendingInsightsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEEF1F5),
+      backgroundColor: const Color(0xFFF2F2F2),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFEEF1F5),
+        backgroundColor: const Color(0xFFF2F2F2),
         elevation: 0,
-        leading: const BackButton(color: Colors.black),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF5A5A5A)),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: const Text(
           'Spending insights',
           style: TextStyle(
-            color: Colors.black,
+            color: Color(0xFF5A5A5A),
             fontWeight: FontWeight.w600,
-            fontSize: 16,
+            fontSize: 20,
+            fontFamily: 'Poppins',
           ),
         ),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Column(
           children: const [
             _TopCard(),
             SizedBox(height: 12),
             _BreakdownCard(),
-            SizedBox(height: 12),
+            SizedBox(height: 16),
             _WeeklySummary(),
             SizedBox(height: 24),
           ],
@@ -52,7 +56,7 @@ class _TopCardState extends State<_TopCard> {
 
   static const _days    = ['20','21','22','23','24','25','26','27','28','29'];
   static const _amounts = [230, 180, 150, 250, 200, 155, 300, 830, 350, 460];
-  static const _heights = [0.28, 0.22, 0.18, 0.30, 0.24, 0.19, 0.36, 0.95, 0.42, 0.55];
+  static const _heights = [0.28, 0.22, 0.18, 0.30, 0.24, 0.19, 0.36, 1.0, 0.42, 0.55];
   static const _dates   = [
     '20 Mar (tue)', '21 Mar (wed)', '22 Mar (thu)', '23 Mar (fri)',
     '24 Mar (sat)', '25 Mar (sun)', '26 Mar (mon)', '27 Mar (mon)',
@@ -62,127 +66,138 @@ class _TopCardState extends State<_TopCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(13),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Top row: gauge card + tooltip ──────────────────────────────────
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Gauge card — light background, matches Image 2
-              Container(
-                width: 140,
-                padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF0F3F7),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 120,
-                      height: 68,
-                      child: CustomPaint(painter: _GaugePainter()),
+          // ── Top section: gauge (left) + tooltip (right) ──────────────────
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // LEFT: gauge card with light background
+                Container(
+                  width: 150,
+                  padding: const EdgeInsets.fromLTRB(10, 12, 10, 12),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFEEF1F5),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(13),
+                      bottomLeft: Radius.circular(0),
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'High spend day',
-                      style: TextStyle(
-                        color: Color(0xFFE53935),
-                        fontWeight: FontWeight.w600,
-                        fontSize: 10,
-                      ),
-                    ),
-                    const SizedBox(height: 1),
-                    const Text(
-                      '₹ 830  Spent',
-                      style: TextStyle(
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 11,
-                      ),
-                    ),
-                    const SizedBox(height: 1),
-                    const Text(
-                      'Above your daily average',
-                      style: TextStyle(color: Colors.grey, fontSize: 9),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-              // Tooltip card — right side, rounded with shadow
-              Expanded(
-                child: Container(
-                  margin: const EdgeInsets.only(top: 4),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFE8EDF3)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.07),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Text(
-                            '₹ ${_amounts[_activeIndex]}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w800,
-                              fontSize: 15,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Text(
-                              _dates[_activeIndex],
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 13,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ),
-                        ],
+                      // Gauge
+                      Center(
+                        child: SizedBox(
+                          width: 150,
+                          height: 85,
+                          child: CustomPaint(painter: _GaugePainter()),
+                        ),
                       ),
-                      const SizedBox(height: 5),
+                      const SizedBox(height: 8),
                       const Text(
-                        '+18% vs avg',
+                        'High spend day',
                         style: TextStyle(
-                          color: Color(0xFF00BFA5),
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
+                          color: Color(0xFF750909),
+                          fontWeight: FontWeight.w500,
+                          fontSize: 11,
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      const Text(
+                        '\u20b9 830  Spent',
+                        style: TextStyle(
+                          color: Color(0xFF5F5F5F),
+                          fontWeight: FontWeight.w500,
+                          fontSize: 11,
+                          fontFamily: 'Poppins',
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      const Text(
+                        'Above your daily average',
+                        style: TextStyle(
+                          color: Color(0xFF5F5F5F),
+                          fontSize: 9,
+                          fontFamily: 'Poppins',
+                          fontWeight: FontWeight.w400,
                         ),
                       ),
                     ],
                   ),
                 ),
-              ),
-            ],
+
+                // RIGHT: tooltip showing selected bar info
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topRight: Radius.circular(13),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _dates[_activeIndex],
+                          style: const TextStyle(
+                            color: Color(0xFF5F5F5F),
+                            fontSize: 14,
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '\u20b9 ${_amounts[_activeIndex]}',
+                          style: const TextStyle(
+                            color: Color(0xFF2E2E2E),
+                            fontSize: 26,
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Spent today',
+                          style: TextStyle(
+                            color: Color(0xFF8E8E8E),
+                            fontSize: 12,
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 14),
-          // ── Bar chart with inline tooltip pointer above active bar ──────────
-          _InteractiveBarChart(
-            days: _days,
-            heights: _heights,
-            amounts: _amounts,
-            activeIndex: _activeIndex,
-            onTap: (i) => setState(() => _activeIndex = i),
+
+          // ── Divider line ─────────────────────────────────────────────────
+          Container(height: 1, color: const Color(0xFFE0E0E0)),
+
+          // ── Bar chart ─────────────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(10, 16, 10, 12),
+            child: _InteractiveBarChart(
+              days: _days,
+              heights: _heights,
+              amounts: _amounts,
+              activeIndex: _activeIndex,
+              onTap: (i) => setState(() => _activeIndex = i),
+            ),
           ),
         ],
       ),
@@ -209,10 +224,10 @@ class _InteractiveBarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const maxH    = 80.0;
-    const labelH  = 14.0;
-    const dotH    = 10.0;
-    const totalH  = maxH + dotH + labelH + 4;
+    const maxH   = 100.0;
+    const labelH = 18.0;
+    const dotH   = 14.0;
+    const totalH = maxH + dotH + labelH + 4;
 
     return SizedBox(
       height: totalH,
@@ -221,69 +236,82 @@ class _InteractiveBarChart extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: List.generate(days.length, (i) {
           final isActive = i == activeIndex;
+
+          // Active bar: solid steel blue. Others: light cyan, fading right
+          Color barColor;
+          if (isActive) {
+            barColor = const Color(0xFF5B9EC9); // solid darker blue for active
+          } else {
+            barColor = const Color(0xFFAEE3EF); // uniform light teal for all others
+          }
+
           return GestureDetector(
             onTap: () => onTap(i),
-            child: MouseRegion(
-              cursor: SystemMouseCursors.click,
-              onEnter: (_) => onTap(i),
-              child: SizedBox(
-                width: 26,
-                height: totalH,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    // Dot above active bar only
-                    SizedBox(
-                      height: dotH,
-                      child: isActive
-                          ? Center(
-                              child: Container(
-                                width: 7,
-                                height: 7,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: const Color(0xFF42A5F5),
-                                    width: 2,
-                                  ),
+            child: SizedBox(
+              width: 26,
+              height: totalH,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  // Dot above active bar only
+                  SizedBox(
+                    height: dotH,
+                    child: isActive
+                        ? Center(
+                            child: Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: const Color(0xFF5B9EC9),
+                                  width: 2,
                                 ),
                               ),
-                            )
-                          : const SizedBox.shrink(),
+                            ),
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                  // Bar
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: 22,
+                    height: maxH * heights[i],
+                    decoration: BoxDecoration(
+                      color: barColor,
+                      borderRadius: BorderRadius.circular(5),
+                      boxShadow: isActive
+                          ? [
+                              BoxShadow(
+                                color: const Color(0xFF5B9EC9).withOpacity(0.4),
+                                blurRadius: 6,
+                                offset: const Offset(0, 3),
+                              )
+                            ]
+                          : null,
                     ),
-                    // Bar
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      width: 20,
-                      height: maxH * heights[i],
-                      decoration: BoxDecoration(
+                  ),
+                  const SizedBox(height: 4),
+                  // Date label
+                  SizedBox(
+                    height: labelH,
+                    child: Text(
+                      days[i],
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontFamily: 'Poppins',
                         color: isActive
-                            ? const Color(0xFF42A5F5)
-                            : const Color(0xFFBDD9F2),
-                        borderRadius: BorderRadius.circular(5),
+                            ? const Color(0xFF2E2E2E)
+                            : const Color(0xAA5A5A5A),
+                        fontWeight: isActive
+                            ? FontWeight.w700
+                            : FontWeight.w400,
                       ),
                     ),
-                    const SizedBox(height: 3),
-                    // Date label
-                    SizedBox(
-                      height: labelH,
-                      child: Text(
-                        days[i],
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 9.5,
-                          color: isActive
-                              ? const Color(0xFF1565C0)
-                              : Colors.grey,
-                          fontWeight: isActive
-                              ? FontWeight.w800
-                              : FontWeight.normal,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           );
@@ -294,48 +322,42 @@ class _InteractiveBarChart extends StatelessWidget {
 }
 
 // ── Gauge Painter ─────────────────────────────────────────────────────────────
-// Matches Image 2:
-//   • Light grey filled half-disc background
-//   • Thick arc band: green(small) | teal(dominant) | orange | red(small)
-//   • Dark needle pointing toward orange/right-of-centre
-//   • Dark filled pivot + white centre
 
 class _GaugePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final cx     = size.width / 2;
-    final cy     = size.height;
-    final outerR = size.width / 2 - 2;
-    const sw     = 15.0;
+    final cy     = size.height;          // baseline at bottom
+    final outerR = size.width / 2 - 4;
+    const sw     = 16.0;
 
-    // 1. Light grey filled half-disc
-    final discPath = Path();
-    discPath.moveTo(cx - outerR - sw / 2, cy);
-    discPath.arcTo(
-      Rect.fromCircle(center: Offset(cx, cy), radius: outerR + sw / 2 + 1),
-      math.pi, math.pi, false,
-    );
-    discPath.lineTo(cx, cy);
-    discPath.close();
-    canvas.drawPath(discPath, Paint()..color = const Color(0xFFDDE3EC));
+    // 1. Background half-disc
+    final discPath = Path()
+      ..moveTo(0, cy)
+      ..arcTo(
+        Rect.fromCircle(center: Offset(cx, cy), radius: outerR + sw / 2 + 2),
+        math.pi, math.pi, false,
+      )
+      ..lineTo(cx, cy)
+      ..close();
+    canvas.drawPath(discPath, Paint()..color = const Color(0xFFEEF1F5));
 
     final arcRect = Rect.fromCircle(center: Offset(cx, cy), radius: outerR);
 
-    // 2. Dark grey base track (background of band)
+    // 2. Grey base track
     canvas.drawArc(arcRect, math.pi, math.pi, false,
       Paint()
-        ..color = const Color(0xFF8E9BAA)
+        ..color = const Color(0xFF9E9E9E)
         ..style = PaintingStyle.stroke
         ..strokeWidth = sw
         ..strokeCap = StrokeCap.butt,
     );
 
-    // 3. Coloured segments: green | teal(dominant) | orange | red
+    // 3. Coloured segments: small green | large teal | grey (right, already from base track)
     final segs = [
-      _Seg(math.pi,        math.pi * 0.17, const Color(0xFF43A047)), // green
-      _Seg(math.pi * 1.17, math.pi * 0.46, const Color(0xFF00897B)), // teal dominant
-      _Seg(math.pi * 1.63, math.pi * 0.21, const Color(0xFFFB8C00)), // orange
-      _Seg(math.pi * 1.84, math.pi * 0.16, const Color(0xFFE53935)), // red
+      _Seg(math.pi,        math.pi * 0.14, const Color(0xFF3DAA55)), // green (small, far left)
+      _Seg(math.pi * 1.14, math.pi * 0.56, const Color(0xFF1D8F86)), // teal (dominant center)
+      // right portion stays grey from the base track drawn above
     ];
     for (final s in segs) {
       canvas.drawArc(arcRect, s.start, s.sweep, false,
@@ -347,41 +369,44 @@ class _GaugePainter extends CustomPainter {
       );
     }
 
-    // 4. Light grey dividers (matching disc bg)
-    for (final a in [math.pi * 1.17, math.pi * 1.63, math.pi * 1.84]) {
-      final x1 = cx + (outerR - sw / 2 - 1) * math.cos(a);
-      final y1 = cy + (outerR - sw / 2 - 1) * math.sin(a);
-      final x2 = cx + (outerR + sw / 2 + 1) * math.cos(a);
-      final y2 = cy + (outerR + sw / 2 + 1) * math.sin(a);
+    // 4. Segment dividers
+    for (final a in [math.pi * 1.14, math.pi * 1.70]) {
+      final x1 = cx + (outerR - sw / 2 - 2) * math.cos(a);
+      final y1 = cy + (outerR - sw / 2 - 2) * math.sin(a);
+      final x2 = cx + (outerR + sw / 2 + 2) * math.cos(a);
+      final y2 = cy + (outerR + sw / 2 + 2) * math.sin(a);
       canvas.drawLine(Offset(x1, y1), Offset(x2, y2),
-          Paint()..color = const Color(0xFFDDE3EC)..strokeWidth = 2.5);
+          Paint()..color = const Color(0xFFEEF1F5)..strokeWidth = 3);
     }
 
-    // 5. Needle — pointing toward orange zone (~300°)
-    const na = math.pi * 1.70;
-    final nl = outerR - 4.0;
-    final nx = cx + nl * math.cos(na);
-    final ny = cy + nl * math.sin(na);
+    // 5. Needle — pointing into orange zone (~295°)
+    const needleAngle = math.pi * 1.78;
+    final needleLen   = outerR - 6.0;
+    final nx = cx + needleLen * math.cos(needleAngle);
+    final ny = cy + needleLen * math.sin(needleAngle);
 
-    // shadow
+    // Shadow
     canvas.drawLine(
-        Offset(cx + 0.7, cy + 0.5), Offset(nx + 0.7, ny + 0.5),
-        Paint()
-          ..color = Colors.black26
-          ..strokeWidth = 2.8
-          ..strokeCap = StrokeCap.round);
-    // needle body
-    canvas.drawLine(Offset(cx, cy), Offset(nx, ny),
-        Paint()
-          ..color = const Color(0xFF263238)
-          ..strokeWidth = 2.2
-          ..strokeCap = StrokeCap.round);
+      Offset(cx + 1, cy + 1), Offset(nx + 1, ny + 1),
+      Paint()
+        ..color = Colors.black26
+        ..strokeWidth = 3
+        ..strokeCap = StrokeCap.round,
+    );
+    // Needle body
+    canvas.drawLine(
+      Offset(cx, cy), Offset(nx, ny),
+      Paint()
+        ..color = const Color(0xFF2A2A2A)
+        ..strokeWidth = 2.5
+        ..strokeCap = StrokeCap.round,
+    );
 
-    // 6. Pivot
-    canvas.drawCircle(Offset(cx, cy), 6.0,
-        Paint()..color = const Color(0xFF263238));
-    canvas.drawCircle(Offset(cx, cy), 2.8,
-        Paint()..color = Colors.white);
+    // 6. Pivot circles
+    canvas.drawCircle(Offset(cx, cy), 7,
+        Paint()..color = const Color(0xFF555A6F));
+    canvas.drawCircle(Offset(cx, cy), 4,
+        Paint()..color = const Color(0xFFA1A1A1));
   }
 
   @override
@@ -402,166 +427,203 @@ class _BreakdownCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(13),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Title
           const Text(
             '27 march breakdown',
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              fontFamily: 'Poppins',
+              color: Color(0xFF5A5A5A),
+            ),
           ),
+          const SizedBox(height: 16),
+
+          // Row 1: Cabs | Bills
+          Row(children: const [
+            Expanded(child: _CatTile(iconWidget: _CabIcon(),   label: 'Cabs',     amount: '\u20b9 180')),
+            SizedBox(width: 12),
+            Expanded(child: _CatTile(iconWidget: _BillIcon(),  label: 'Bills',    amount: '\u20b9 180')),
+          ]),
           const SizedBox(height: 10),
+
+          // Row 2: Lunch | Supplies
           Row(children: const [
-            Expanded(
-              child: _CatTile(
-                icon: Icons.local_taxi,
-                label: 'Cabs',
-                amount: '₹ 180',
-                bg: Color(0xFFE3F2FD),
-                iconColor: Color(0xFF1E88E5),
-              ),
-            ),
-            SizedBox(width: 6),
-            Expanded(
-              child: _CatTile(
-                icon: Icons.receipt_long,
-                label: 'Bills',
-                amount: '₹ 180',
-                bg: Color(0xFFEDE7F6),
-                iconColor: Color(0xFF7B1FA2),
-              ),
-            ),
+            Expanded(child: _CatTile(iconWidget: _LunchIcon(),  label: 'Lunch',    amount: '\u20b9 220')),
+            SizedBox(width: 12),
+            Expanded(child: _CatTile(iconWidget: _SupplyIcon(), label: 'Supplies', amount: '\u20b9 220')),
           ]),
-          const SizedBox(height: 6),
-          Row(children: const [
-            Expanded(
-              child: _CatTile(
-                icon: Icons.lunch_dining,
-                label: 'Lunch',
-                amount: '₹ 220',
-                bg: Color(0xFFFFF8E1),
-                iconColor: Color(0xFFF57F17),
-              ),
-            ),
-            SizedBox(width: 6),
-            Expanded(
-              child: _CatTile(
-                icon: Icons.shopping_cart_outlined,
-                label: 'Supplies',
-                amount: '₹ 220',
-                bg: Color(0xFFE8F5E9),
-                iconColor: Color(0xFF388E3C),
-              ),
-            ),
-          ]),
+
+          const SizedBox(height: 16),
+          const Divider(height: 1, thickness: 0.8, color: Color(0xFFDDDDDD)),
           const SizedBox(height: 12),
-          const Divider(height: 1, color: Color(0xFFEEEEEE)),
-          const SizedBox(height: 8),
+
+          // Compared section
           const Text(
             'Compared to your average day',
-            style: TextStyle(color: Colors.grey, fontSize: 11.5),
+            style: TextStyle(
+              color: Color(0xFF8E8E8E),
+              fontSize: 12,
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.w400,
+            ),
           ),
-          const SizedBox(height: 5),
-          const _CmpRow(label: '₹ 180   more on food'),
-          const SizedBox(height: 3),
-          const _CmpRow(label: '₹ 90    more on cabs'),
-          const SizedBox(height: 12),
-          const Divider(height: 1, color: Color(0xFFEEEEEE)),
           const SizedBox(height: 8),
-          RichText(
-            text: const TextSpan(
-              style: TextStyle(color: Colors.black87, fontSize: 12),
-              children: [
-                TextSpan(
-                  text: 'Biggest contributor : ',
-                  style: TextStyle(color: Colors.grey),
-                ),
-                TextSpan(
-                  text: 'cabs',
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
-              ],
+          const _CmpRow(amount: '\u20b9 180', label: 'more on food'),
+          const SizedBox(height: 5),
+          const _CmpRow(amount: '\u20b9 90',  label: 'more on cabs'),
+
+          const SizedBox(height: 16),
+          const Divider(height: 1, thickness: 0.8, color: Color(0xFFDDDDDD)),
+          const SizedBox(height: 12),
+
+          // Biggest contributor
+          const Text(
+            'Biggest contributor : cabs',
+            style: TextStyle(
+              color: Color(0xFF8E8E8E),
+              fontSize: 12,
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.w400,
             ),
           ),
           const SizedBox(height: 3),
           const Text(
             'You spent 40% on travel more than usual',
-            style: TextStyle(color: Colors.grey, fontSize: 11.5),
+            style: TextStyle(
+              color: Color(0xFF8E8E8E),
+              fontSize: 12,
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.w400,
+            ),
           ),
         ],
       ),
     );
   }
 }
+
+// ── Category Tile ─────────────────────────────────────────────────────────────
 
 class _CatTile extends StatelessWidget {
-  final IconData icon;
-  final String label, amount;
-  final Color bg;
-  final Color iconColor;
-
-  const _CatTile({
-    required this.icon,
-    required this.label,
-    required this.amount,
-    required this.bg,
-    required this.iconColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF4F6F9),
-        borderRadius: BorderRadius.circular(9),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: bg,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Icon(icon, size: 13, color: iconColor),
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(label,
-                    style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                Text(amount,
-                    style: const TextStyle(
-                        fontSize: 11, fontWeight: FontWeight.w700)),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CmpRow extends StatelessWidget {
+  final Widget iconWidget;
   final String label;
-  const _CmpRow({required this.label});
+  final String amount;
+  const _CatTile({required this.iconWidget, required this.label, required this.amount});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Icon(Icons.arrow_upward, size: 12, color: Color(0xFFE53935)),
-        const SizedBox(width: 4),
-        Text(label,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+        iconWidget,
+        const SizedBox(width: 10),
+        Text(
+          '$label   $amount',
+          style: const TextStyle(
+            color: Color(0xFF5F5F5F),
+            fontSize: 13,
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.w500,
+          ),
+        ),
       ],
+    );
+  }
+}
+
+// ── Icon Boxes (matching Figma border colors) ─────────────────────────────────
+
+class _CabIcon extends StatelessWidget {
+  const _CabIcon();
+  @override
+  Widget build(BuildContext context) => _IconBox(
+    color: const Color(0x354D8CC6), border: const Color(0xFF4D8BC6),
+    child: const Icon(Icons.local_taxi, size: 15, color: Color(0xFF4D8BC6)),
+  );
+}
+
+class _BillIcon extends StatelessWidget {
+  const _BillIcon();
+  @override
+  Widget build(BuildContext context) => _IconBox(
+    color: const Color(0x0FA17BF1), border: const Color(0xFFA17BF1),
+    child: const Icon(Icons.receipt_long, size: 15, color: Color(0xFFA17BF1)),
+  );
+}
+
+class _LunchIcon extends StatelessWidget {
+  const _LunchIcon();
+  @override
+  Widget build(BuildContext context) => _IconBox(
+    color: const Color(0x23D7A624), border: const Color(0xFFC39721),
+    child: const Icon(Icons.lunch_dining, size: 15, color: Color(0xFFC39721)),
+  );
+}
+
+class _SupplyIcon extends StatelessWidget {
+  const _SupplyIcon();
+  @override
+  Widget build(BuildContext context) => _IconBox(
+    color: const Color(0x1EEFA169), border: const Color(0xFFEFA169),
+    child: const Icon(Icons.shopping_bag_outlined, size: 15, color: Color(0xFFEFA169)),
+  );
+}
+
+class _IconBox extends StatelessWidget {
+  final Color color, border;
+  final Widget child;
+  const _IconBox({required this.color, required this.border, required this.child});
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 36, height: 30,
+    decoration: BoxDecoration(
+      color: color,
+      borderRadius: BorderRadius.circular(4),
+      border: Border.all(color: border, width: 0.8),
+    ),
+    child: Center(child: child),
+  );
+}
+
+// ── Comparison Row ────────────────────────────────────────────────────────────
+
+class _CmpRow extends StatelessWidget {
+  final String amount, label;
+  const _CmpRow({required this.amount, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return RichText(
+      text: TextSpan(
+        children: [
+          TextSpan(
+            text: '  $amount ',
+            style: const TextStyle(
+              color: Color(0xFF5F5F5F),
+              fontSize: 13,
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          TextSpan(
+            text: label,
+            style: const TextStyle(
+              color: Color(0xFF8E8E8E),
+              fontSize: 13,
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -575,21 +637,18 @@ class _WeeklySummary extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 13),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(13),
       ),
-      child: RichText(
-        text: const TextSpan(
-          style: TextStyle(fontSize: 13.5, color: Colors.black87),
-          children: [
-            TextSpan(text: 'This week: '),
-            TextSpan(
-              text: '₹14,480 Spent',
-              style: TextStyle(fontWeight: FontWeight.w800),
-            ),
-          ],
+      child: const Text(
+        'This week:  \u20b9 14,480  Spent',
+        style: TextStyle(
+          color: Color(0xFF5A5A5A),
+          fontSize: 14,
+          fontFamily: 'Poppins',
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

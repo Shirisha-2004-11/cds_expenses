@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 // ignore: unused_import
-import '../../theme/dashboard_colors.dart';
+import '../../colors/dashboard_colors.dart';
 
 /// A small rounded icon container used for expense category icons,
 /// notification bell, stat percent badge, etc.

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../theme/dashboard_text_styles.dart';
+import '../../fonts/dashboard_text_styles.dart';
 
 /// A muted section-label text widget used in AddExpensePage
 /// (e.g. "Category", "Payment Method", "Merchant").

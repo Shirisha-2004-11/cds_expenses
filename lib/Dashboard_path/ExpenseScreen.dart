@@ -5,13 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/api_config.dart'; // ← ADDED
 // ── Centralised theme tokens ─────────────────────────────────────────────────
 // ignore: unused_import
-import '../theme/dashboard_colors.dart';
+import '../colors/dashboard_colors.dart';
 // ignore: unused_import
-import '../theme/dashboard_text_styles.dart';
+import '../fonts/dashboard_text_styles.dart';
 // ignore: unused_import
 import '../widgets/common/dashboard_save_button.dart';
 // ignore: unused_import
@@ -87,8 +86,7 @@ class _AddExpensePageState extends State<AddExpensePage>
     with TickerProviderStateMixin {
   // 🔑 Gemini API Keys
   final List<String> _apiKeys = [
-    'AIzaSyCHdFZR0XQi4TXdjk5GFtPOOA3H-AM2nUo',
-    'AIzaSyBRijFjg0CCU0ESHo7gVeyKJd0uiJvZNQ8',
+    'AIzaSyA_Dqlk_YdS2g-dopt35BUglqzYWoYGbfE',
   ];
 
   int _currentKeyIndex = 0;

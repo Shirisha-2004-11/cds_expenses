@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:web/web.dart' as web;
 import '../../constants/api_constants.dart';
-import '../../constants/app_colors.dart';
+import '../../colors/app_colors.dart';
 import '../../services/auth_service.dart';
 import 'package:cds_expenses/Dashboard_path/Dashboard.dart';
 
@@ -232,7 +232,7 @@ class MicrosoftAuthService {
           duration: const Duration(seconds: 4),
         ),
       );
-      // TODO: Navigate to Dashboard screen
+      // Navigate to Dashboard screen
        Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => DashboardScreen()));
     }
   }

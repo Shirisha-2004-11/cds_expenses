@@ -52,27 +52,35 @@ class Expense {
 
   IconData get icon {
     switch (category.toLowerCase()) {
-      case 'food':         return Icons.fastfood;
-      case 'travel':       return Icons.directions_car;
-      case 'bills':        return Icons.receipt_long;
-      case 'medical':      return Icons.local_pharmacy;
-      case 'entertainment':return Icons.movie;
-      case 'education':    return Icons.school;
-      case 'rent':         return Icons.home;
-      default:             return Icons.shopping_bag;
+      case 'food':          return Icons.fastfood;
+      case 'travel':        return Icons.directions_car;
+      case 'supplies':      return Icons.shopping_cart;
+      case 'bills':         return Icons.receipt_long;
+      case 'entertainment': return Icons.movie;
+      case 'medical':       return Icons.local_pharmacy;
+      case 'education':     return Icons.school;
+      case 'rent':          return Icons.home;
+      case 'petrol':        return Icons.local_gas_station;
+      case 'electricity':   return Icons.electric_bolt;
+      case 'home services': return Icons.home_repair_service;
+      default:              return Icons.category;
     }
   }
 
   Color get color {
     switch (category.toLowerCase()) {
-      case 'food':         return const Color(0xFFFF6B6B);
-      case 'travel':       return const Color(0xFF4FC3F7);
-      case 'bills':        return const Color(0xFFFFB347);
-      case 'medical':      return const Color(0xFF81C784);
-      case 'entertainment':return const Color(0xFFCE93D8);
-      case 'education':    return const Color(0xFF4DB6AC);
-      case 'rent':         return const Color(0xFFFFD54F);
-      default:             return const Color(0xFFA5D6A7);
+      case 'food':          return const Color(0xFFFF6B6B);
+      case 'travel':        return const Color(0xFF4FC3F7);
+      case 'supplies':      return const Color(0xFFEFA169);
+      case 'bills':         return const Color(0xFFFFB347);
+      case 'entertainment': return const Color(0xFFCE93D8);
+      case 'medical':       return const Color(0xFF81C784);
+      case 'education':     return const Color(0xFF4DB6AC);
+      case 'rent':          return const Color(0xFFFFD54F);
+      case 'petrol':        return const Color(0xFFFF8A65);
+      case 'electricity':   return const Color(0xFFFDD835);
+      case 'home services': return const Color(0xFF90CAF9);
+      default:              return const Color(0xFF90A4AE);
     }
   }
 
@@ -198,9 +206,25 @@ class ExpenseProvider extends ChangeNotifier {
     }).fold(0.0, (s, e) => s + e.amount);
   }
 
-  // ── Insight items (for donut chart) ───────────────────────────────────────
+  // ── Category breakdown (ALL expenses) ─────────────────────────────────────
+  Map<String, double> get categoryTotalsAll {
+    final map = <String, double>{};
+    for (final e in _expenses) {
+      map[e.category] = (map[e.category] ?? 0) + e.amount;
+    }
+    return map;
+  }
+
+  /// Sorted by amount descending (all expenses)
+  List<MapEntry<String, double>> get sortedCategoriesAll {
+    final entries = categoryTotalsAll.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    return entries;
+  }
+
+  // ── Insight items (for donut chart) — uses ALL expenses ───────────────────
   List<Map<String, dynamic>> get insightItems {
-    return sortedCategories.map((entry) {
+    return sortedCategoriesAll.map((entry) {
       final dummy = Expense(
         id: '', category: entry.key, merchant: '', date: '',
         note: '', amount: 0, paymentMethod: '',

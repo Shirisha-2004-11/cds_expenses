@@ -90,7 +90,7 @@ class _AddExpensePageState extends State<AddExpensePage>
     with TickerProviderStateMixin {
   // 🔑 Gemini API Keys
   final List<String> _apiKeys = [
-    '....................', // ← REPLACE with your own Gemini API keys
+    'AIzaSyD81_WGLPcDkPRlCZaOmRAsGqGMleEwkto', // ← REPLACE with your own Gemini API keys
   ];
 
   int _currentKeyIndex = 0;
@@ -130,16 +130,20 @@ class _AddExpensePageState extends State<AddExpensePage>
     'NET_BANKING',
   ];
 
-  // ── Fixed base categories ────────────────────────────────────────────────
+  // Matches backend IDs: 1-Food 2-Travel 3-Supplies 4-Bills 5-Entertainment
+  // 6-Medical 7-Education 8-Rent 9-Petrol 10-Electricity 11-Home Services
   final List<Map<String, String>> _baseCategories = [
-    {'label': 'Food', 'emoji': '🍔'},
-    {'label': 'Travel', 'emoji': '✈️'},
-    {'label': 'Supplies', 'emoji': '🛒'},
-    {'label': 'Bills', 'emoji': '💡'},
+    {'label': 'Food',          'emoji': '🍔'},
+    {'label': 'Travel',        'emoji': '✈️'},
+    {'label': 'Supplies',      'emoji': '🛒'},
+    {'label': 'Bills',         'emoji': '💡'},
     {'label': 'Entertainment', 'emoji': '🎮'},
-    {'label': 'Medical', 'emoji': '💊'},
-    {'label': 'Education', 'emoji': '🎓'},
-    {'label': 'Rent', 'emoji': '🏠'},
+    {'label': 'Medical',       'emoji': '💊'},
+    {'label': 'Education',     'emoji': '🎓'},
+    {'label': 'Rent',          'emoji': '🏠'},
+    {'label': 'Petrol',        'emoji': '⛽'},
+    {'label': 'Electricity',   'emoji': '⚡'},
+    {'label': 'Home Services', 'emoji': '🔧'},
   ];
 
   // Maps category name (case-insensitive) -> real category ID from the backend
@@ -339,99 +343,124 @@ class _AddExpensePageState extends State<AddExpensePage>
   /// When a scanned bill's merchant matches any key (case-insensitive substring),
   /// this category is used instead of whatever the AI returned.
   static const Map<String, String> _merchantCategoryOverrides = {
-    // Medical
-    'apollo'       : 'Medical',
-    'medplus'      : 'Medical',
-    'netmeds'      : 'Medical',
-    'pharmeasy'    : 'Medical',
-    '1mg'          : 'Medical',
-    'practo'       : 'Medical',
-    'fortis'       : 'Medical',
-    'manipal'      : 'Medical',
-    'narayana'     : 'Medical',
-    'max hospital' : 'Medical',
-    'aiims'        : 'Medical',
-    'cipla'        : 'Medical',
-    'clinic'       : 'Medical',
-    'hospital'     : 'Medical',
-    'pharmacy'     : 'Medical',
-    'diagnostic'   : 'Medical',
-    // Food
-    'swiggy'       : 'Food',
-    'zomato'       : 'Food',
-    'udipi'        : 'Food',
-    'udupi'        : 'Food',
-    'dominos'      : 'Food',
-    'pizza hut'    : 'Food',
-    'mcdonald'     : 'Food',
-    'kfc'          : 'Food',
-    'subway'       : 'Food',
-    'burger king'  : 'Food',
-    'starbucks'    : 'Food',
-    'cafe coffee'  : 'Food',
-    'haldiram'     : 'Food',
-    'barbeque'     : 'Food',
-    'restaurant'   : 'Food',
-    'dhaba'        : 'Food',
-    // Travel
-    'ola'          : 'Travel',
-    'uber'         : 'Travel',
-    'rapido'       : 'Travel',
-    'bmtc'         : 'Travel',
-    'irctc'        : 'Travel',
-    'indigo'       : 'Travel',
-    'air india'    : 'Travel',
-    'spicejet'     : 'Travel',
-    'goibibo'      : 'Travel',
-    'makemytrip'   : 'Travel',
-    'redbus'       : 'Travel',
-    'metro'        : 'Travel',
-    'namma metro'  : 'Travel',
-    // Bills / Utilities
-    'bescom'       : 'Bills',
-    'bbmp'         : 'Bills',
-    'bwssb'        : 'Bills',
-    'airtel'       : 'Bills',
-    'jio'          : 'Bills',
-    'bsnl'         : 'Bills',
-    'vodafone'     : 'Bills',
-    'electricity'  : 'Bills',
-    'broadband'    : 'Bills',
-    // Supplies / Groceries
-    'bigbasket'    : 'Supplies',
-    'blinkit'      : 'Supplies',
-    'zepto'        : 'Supplies',
-    'dmart'        : 'Supplies',
+    // Medical (ID 6)
+    'apollo'        : 'Medical',
+    'medplus'       : 'Medical',
+    'netmeds'       : 'Medical',
+    'pharmeasy'     : 'Medical',
+    '1mg'           : 'Medical',
+    'practo'        : 'Medical',
+    'fortis'        : 'Medical',
+    'manipal'       : 'Medical',
+    'narayana'      : 'Medical',
+    'max hospital'  : 'Medical',
+    'aiims'         : 'Medical',
+    'cipla'         : 'Medical',
+    'clinic'        : 'Medical',
+    'hospital'      : 'Medical',
+    'pharmacy'      : 'Medical',
+    'diagnostic'    : 'Medical',
+    // Food (ID 1)
+    'swiggy'        : 'Food',
+    'zomato'        : 'Food',
+    'udipi'         : 'Food',
+    'udupi'         : 'Food',
+    'dominos'       : 'Food',
+    'pizza hut'     : 'Food',
+    'mcdonald'      : 'Food',
+    'kfc'           : 'Food',
+    'subway'        : 'Food',
+    'burger king'   : 'Food',
+    'starbucks'     : 'Food',
+    'cafe coffee'   : 'Food',
+    'haldiram'      : 'Food',
+    'barbeque'      : 'Food',
+    'restaurant'    : 'Food',
+    'dhaba'         : 'Food',
+    // Travel (ID 2)
+    'ola'           : 'Travel',
+    'uber'          : 'Travel',
+    'rapido'        : 'Travel',
+    'bmtc'          : 'Travel',
+    'irctc'         : 'Travel',
+    'indigo'        : 'Travel',
+    'air india'     : 'Travel',
+    'spicejet'      : 'Travel',
+    'goibibo'       : 'Travel',
+    'makemytrip'    : 'Travel',
+    'redbus'        : 'Travel',
+    'metro'         : 'Travel',
+    'namma metro'   : 'Travel',
+    // Bills (ID 4)
+    'airtel'        : 'Bills',
+    'jio'           : 'Bills',
+    'bsnl'          : 'Bills',
+    'vodafone'      : 'Bills',
+    'broadband'     : 'Bills',
+    // Petrol (ID 9)
+    'bpcl'          : 'Petrol',
+    'hpcl'          : 'Petrol',
+    'iocl'          : 'Petrol',
+    'bharat petroleum': 'Petrol',
+    'indian oil'    : 'Petrol',
+    'hindustan petroleum': 'Petrol',
+    'nayara'        : 'Petrol',
+    'petrol'        : 'Petrol',
+    'fuel'          : 'Petrol',
+    'diesel'        : 'Petrol',
+    // Electricity (ID 10)
+    'bescom'        : 'Electricity',
+    'bbmp'          : 'Electricity',
+    'bwssb'         : 'Electricity',
+    'electricity'   : 'Electricity',
+    'tneb'          : 'Electricity',
+    'mseb'          : 'Electricity',
+    'tata power'    : 'Electricity',
+    'adani electricity': 'Electricity',
+    // Supplies (ID 3)
+    'bigbasket'     : 'Supplies',
+    'blinkit'       : 'Supplies',
+    'zepto'         : 'Supplies',
+    'dmart'         : 'Supplies',
     'reliance fresh': 'Supplies',
-    'spencer'      : 'Supplies',
-    'nilgiris'     : 'Supplies',
-    'amazon'       : 'Supplies',
-    'flipkart'     : 'Supplies',
-    'myntra'       : 'Supplies',
-    'lifestyle'    : 'Supplies',
-    'max fashion'  : 'Supplies',
-    'westside'     : 'Supplies',
-    'nykaa'        : 'Supplies',
-    // Entertainment
-    'pvr'          : 'Entertainment',
-    'inox'         : 'Entertainment',
-    'netflix'      : 'Entertainment',
-    'hotstar'      : 'Entertainment',
-    'amazon prime' : 'Entertainment',
-    'spotify'      : 'Entertainment',
-    'bookmyshow'   : 'Entertainment',
-    // Education
-    'byju'         : 'Education',
-    'unacademy'    : 'Education',
-    'coursera'     : 'Education',
-    'udemy'        : 'Education',
-    'vedantu'      : 'Education',
-    'school'       : 'Education',
-    'college'      : 'Education',
-    'university'   : 'Education',
-    // Rent
-    'rent'         : 'Rent',
-    'hostel'       : 'Rent',
+    'spencer'       : 'Supplies',
+    'nilgiris'      : 'Supplies',
+    'amazon'        : 'Supplies',
+    'flipkart'      : 'Supplies',
+    'myntra'        : 'Supplies',
+    'lifestyle'     : 'Supplies',
+    'max fashion'   : 'Supplies',
+    'westside'      : 'Supplies',
+    'nykaa'         : 'Supplies',
+    // Entertainment (ID 5)
+    'pvr'           : 'Entertainment',
+    'inox'          : 'Entertainment',
+    'netflix'       : 'Entertainment',
+    'hotstar'       : 'Entertainment',
+    'amazon prime'  : 'Entertainment',
+    'spotify'       : 'Entertainment',
+    'bookmyshow'    : 'Entertainment',
+    // Education (ID 7)
+    'byju'          : 'Education',
+    'unacademy'     : 'Education',
+    'coursera'      : 'Education',
+    'udemy'         : 'Education',
+    'vedantu'       : 'Education',
+    'school'        : 'Education',
+    'college'       : 'Education',
+    'university'    : 'Education',
+    // Rent (ID 8)
+    'rent'          : 'Rent',
+    'hostel'        : 'Rent',
+    // Home Services (ID 11)
+    'urban company' : 'Home Services',
+    'urbanclap'     : 'Home Services',
+    'plumber'       : 'Home Services',
+    'electrician'   : 'Home Services',
+    'carpenter'     : 'Home Services',
+    'cleaning'      : 'Home Services',
+    'pest control'  : 'Home Services',
+    'painting'      : 'Home Services',
   };
 
   /// Checks the merchant name (and optionally extra text) against the override
@@ -455,7 +484,7 @@ class _AddExpensePageState extends State<AddExpensePage>
 
   String _getEmojiForCategory(String category) {
     final c = category.toLowerCase();
-    if (c.contains('petrol') || c.contains('fuel') || c.contains('gas') || c.contains('diesel') || c.contains('bpcl') || c.contains('hpcl') || c.contains('iocl') || c.contains('bharat petroleum') || c.contains('indian oil') || c.contains('hindustan petroleum')) return '⛽';
+    if (c.contains('petrol') || c.contains('fuel') || c.contains('gas') || c.contains('diesel') || c.contains('bpcl') || c.contains('hpcl') || c.contains('iocl') || c.contains('bharat petroleum') || c.contains('indian oil') || c.contains('hindustan petroleum')||c.contains('nayara energy')) return '⛽';
     if (c.contains('medical') || c.contains('doctor') || c.contains('hospital') || c.contains('pharmacy') || c.contains('clinic') || c.contains('apollo') || c.contains('medplus') || c.contains('netmeds')) return '💊';
     if (c.contains('grocery') || c.contains('vegetable') || c.contains('supermarket') || c.contains('bigbasket') || c.contains('zepto') || c.contains('blinkit') || c.contains('dmart')) return '🥦';
     if (c.contains('gym') || c.contains('fitness') || c.contains('workout') || c.contains('cult')) return '🏋️';
@@ -551,27 +580,27 @@ class _AddExpensePageState extends State<AddExpensePage>
         2. date     — Format: Month Day only (e.g. "March 18"). If not visible, return "".
         3. amount   — The final TOTAL amount as a plain number string (e.g. "485").
                       Do NOT include ₹ or Rs symbol. Just the number.
-        4. category — Read the bill carefully and assign the MOST SPECIFIC category.
-                      IMPORTANT RULES for category:
-                      - Petrol stations → MUST return 'petrol'.
-                      - Medical/pharmacy/hospital → return 'medical'
-                      - Grocery/supermarket → return 'grocery'
-                      - Electricity/water/gas utility bills → return 'electricity' or 'water' or 'gas utility'
-                      - Gym/fitness → return 'gym'
-                      - Internet/WiFi/broadband → return 'internet'
-                      - Restaurant/food delivery → return 'food'
-                      - Flight/train/bus/cab (NOT petrol) → return 'travel'
-                      - Amazon/Flipkart/shopping → return 'shopping'
-                      - Netflix/OTT/cinema → return 'entertainment'
-                      - School/college/tuition → return 'education'
-                      - House rent → return 'rent'
-                      - Salon/spa/beauty → return 'salon'
-                      - Insurance → return 'insurance'
-                      - If nothing matches, return a short lowercase word.
+        4. category — You MUST return ONLY one of these exact category names:
+                      Food, Travel, Supplies, Bills, Entertainment, Medical,
+                      Education, Rent, Petrol, Electricity, Home Services
+                      IMPORTANT RULES:
+                      - Petrol/fuel/diesel stations → return 'Petrol'
+                      - Electricity/power/EB/BESCOM/TNEB/MSEB bills → return 'Electricity'
+                      - Plumber/electrician/carpenter/cleaning/Urban Company → return 'Home Services'
+                      - Medical/pharmacy/hospital/clinic → return 'Medical'
+                      - Grocery/supermarket/BigBasket/Zepto/DMart → return 'Supplies'
+                      - Internet/WiFi/broadband/Jio/Airtel/phone bill → return 'Bills'
+                      - Restaurant/food delivery/Swiggy/Zomato → return 'Food'
+                      - Flight/train/bus/cab/Ola/Uber (NOT petrol) → return 'Travel'
+                      - Amazon/Flipkart/shopping/clothes → return 'Supplies'
+                      - Netflix/OTT/cinema/PVR → return 'Entertainment'
+                      - School/college/tuition/course → return 'Education'
+                      - House rent/hostel → return 'Rent'
+                      - If nothing matches clearly, return 'Bills'
         5. confidence — A number 1-100 showing how confident you are.
 
         Return ONLY valid JSON like:
-        {"merchant":"Bharat Petroleum","date":"March 18","amount":"485","category":"petrol","confidence":98}
+        {"merchant":"Bharat Petroleum","date":"March 18","amount":"485","category":"Petrol","confidence":98}
 
         No markdown, no explanation, no extra text. Just the JSON.
       """);

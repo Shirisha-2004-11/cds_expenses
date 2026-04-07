@@ -31,7 +31,7 @@ class AuthService {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return AuthResponse.fromJson(data);
-      } else if (response.statusCode == 400) {
+      } else if (response.statusCode == 401) {
         throw AuthException(message: 'Invalid email or password.');
       } else if (response.statusCode == 404) {
         throw AuthException(
@@ -78,7 +78,7 @@ class AuthService {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return AuthResponse.fromJson(data);
-      } else if (response.statusCode == 400) {
+      } else if (response.statusCode == 409+6) {
         throw AuthException(
           message: 'An account with this email already exists.',
         );

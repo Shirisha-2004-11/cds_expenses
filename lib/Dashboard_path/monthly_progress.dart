@@ -19,7 +19,14 @@ class BudgetProgressCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double progress = totalSpent / totalBudget;
+    // ✅ FIX: Safe division — when totalBudget is 0 (data not loaded yet or
+    //         backend returned 0), progress defaults to 0.0 instead of NaN.
+    //         .clamp(0.0, 1.0) also prevents values above 1.0 (over-budget)
+    //         from breaking the LinearProgressIndicator.
+    final double progress = (totalBudget > 0)
+        ? (totalSpent / totalBudget).clamp(0.0, 1.0)
+        : 0.0;
+
     final double remaining = totalBudget - totalSpent;
 
     Color progressColor;
@@ -27,26 +34,26 @@ class BudgetProgressCard extends StatelessWidget {
 
     if (progress < 0.6) {
       progressColor = const Color(0xFF4CAF50);
-      statusText = 'On track 🎯';
+      statusText    = 'On track 🎯';
     } else if (progress < 0.85) {
       progressColor = const Color(0xFFFFB347);
-      statusText = 'Spending up ⚠️';
+      statusText    = 'Spending up ⚠️';
     } else {
       progressColor = const Color(0xFFE53935);
-      statusText = 'Near limit 🔴';
+      statusText    = 'Near limit 🔴';
     }
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      margin:  const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color:        Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color:      Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
-            offset: const Offset(0, 2),
+            offset:     const Offset(0, 2),
           ),
         ],
       ),
@@ -61,21 +68,21 @@ class BudgetProgressCard extends StatelessWidget {
                 'Monthly Budget',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                  color: Color(0xFF1A1A2E),
+                  fontSize:   15,
+                  color:      Color(0xFF1A1A2E),
                 ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: progressColor.withValues(alpha: 0.12),
+                  color:        progressColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   statusText,
                   style: TextStyle(
-                    fontSize: 11,
-                    color: progressColor,
+                    fontSize:   11,
+                    color:      progressColor,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -89,10 +96,10 @@ class BudgetProgressCard extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 10,
+              value:           progress,   // always 0.0–1.0, never NaN
+              minHeight:       10,
               backgroundColor: const Color(0xFFF0F0F0),
-              valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+              valueColor:      AlwaysStoppedAnimation<Color>(progressColor),
             ),
           ),
 
@@ -110,9 +117,9 @@ class BudgetProgressCard extends StatelessWidget {
                   Text(
                     '₹ ${totalSpent.toStringAsFixed(0)}',
                     style: const TextStyle(
-                      fontSize: 14,
+                      fontSize:   14,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF1A1A2E),
+                      color:      Color(0xFF1A1A2E),
                     ),
                   ),
                 ],
@@ -125,9 +132,9 @@ class BudgetProgressCard extends StatelessWidget {
                   Text(
                     '₹ ${remaining.toStringAsFixed(0)}',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize:   14,
                       fontWeight: FontWeight.bold,
-                      color: progressColor,
+                      color:      progressColor,
                     ),
                   ),
                 ],
@@ -140,7 +147,10 @@ class BudgetProgressCard extends StatelessWidget {
           // Percentage label
           Center(
             child: Text(
-              '${(progress * 100).toStringAsFixed(0)}% of ₹ ${totalBudget.toStringAsFixed(0)} used',
+              // ✅ FIX: Shows 0% instead of NaN% when budget is zero
+              totalBudget > 0
+                  ? '${(progress * 100).toStringAsFixed(0)}% of ₹ ${totalBudget.toStringAsFixed(0)} used'
+                  : 'No budget set',
               style: const TextStyle(fontSize: 11, color: Colors.grey),
             ),
           ),

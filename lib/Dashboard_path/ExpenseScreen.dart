@@ -76,7 +76,11 @@ class ReceiptLine {
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 class AddExpensePage extends StatefulWidget {
-  const AddExpensePage({super.key});
+  /// Called after a successful save so the dashboard can update instantly.
+  final void Function(String category, String merchant, String date,
+      String note, double amount, String paymentMethod)? onExpenseAdded;
+
+  const AddExpensePage({super.key, this.onExpenseAdded});
 
   @override
   State<AddExpensePage> createState() => _AddExpensePageState();
@@ -86,7 +90,7 @@ class _AddExpensePageState extends State<AddExpensePage>
     with TickerProviderStateMixin {
   // 🔑 Gemini API Keys
   final List<String> _apiKeys = [
-    'AIzaSyA_Dqlk_YdS2g-dopt35BUglqzYWoYGbfE',
+    '....................', // ← REPLACE with your own Gemini API keys
   ];
 
   int _currentKeyIndex = 0;
@@ -138,6 +142,9 @@ class _AddExpensePageState extends State<AddExpensePage>
     {'label': 'Rent', 'emoji': '🏠'},
   ];
 
+  // Maps category name (case-insensitive) -> real category ID from the backend
+  Map<String, int> _categoryMap = {};
+
   @override
   void initState() {
     super.initState();
@@ -155,6 +162,48 @@ class _AddExpensePageState extends State<AddExpensePage>
       parent: _fillAnimController,
       curve: Curves.easeOut,
     );
+
+    _loadCategories();
+  }
+
+  // Load real category IDs from backend
+  Future<void> _loadCategories() async {
+    try {
+      final headers = await ApiConfig.authHeaders;
+      final response = await http
+          .get(Uri.parse(ApiConfig.categories), headers: headers)
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final decoded = jsonDecode(response.body);
+        List<dynamic> list = decoded is List
+            ? decoded
+            : ((decoded['data'] ?? decoded['categories'] ?? []) as List);
+
+        final map = <String, int>{};
+        for (final item in list) {
+          final name = (item['name'] ?? item['categoryName'] ?? '').toString().toLowerCase().trim();
+          final id = item['id'] ?? item['categoryId'];
+          if (name.isNotEmpty && id != null) {
+            map[name] = (id as num).toInt();
+          }
+        }
+        if (mounted) setState(() => _categoryMap = map);
+        debugPrint('Loaded categories: $map');
+      }
+    } catch (e) {
+      debugPrint('Could not load categories: $e');
+    }
+  }
+
+  // Resolve the selected category label -> its real backend ID
+  int _resolvedCategoryId() {
+    final key = _selectedCategory.toLowerCase().trim();
+    if (_categoryMap.containsKey(key)) return _categoryMap[key]!;
+    for (final entry in _categoryMap.entries) {
+      if (entry.key.contains(key) || key.contains(entry.key)) return entry.value;
+    }
+    return _categoryMap.values.isNotEmpty ? _categoryMap.values.first : 1;
   }
 
   @override
@@ -196,44 +245,74 @@ class _AddExpensePageState extends State<AddExpensePage>
       expenseDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
     }
 
-    final body = jsonEncode({
+    // ── DEBUG: trace exactly what is sent and what backend returns ──────────
+    final resolvedId = _resolvedCategoryId();
+    debugPrint('══════════════ SAVE EXPENSE DEBUG ══════════════');
+    debugPrint('Selected category  : $_selectedCategory');
+    debugPrint('Category map       : $_categoryMap');
+    debugPrint('Resolved categoryId: $resolvedId');
+
+    final bodyMap = {
       'amount': double.tryParse(_amountController.text.trim()) ?? 0.0,
       'merchant': _merchantController.text.trim(),
       'expenseDate': expenseDate,
       'description': _noteController.text.trim(),
       'paymentMethod': _selectedPaymentMethod,
-      'categoryId': 1, // TODO: replace with real category ID from GET /categories
-    });
+      'category': _selectedCategory,
+      'categoryId': resolvedId,
+    };
+    debugPrint('Request body       : ${jsonEncode(bodyMap)}');
+    debugPrint('Posting to         : ${ApiConfig.expenses}');
+
+    final body = jsonEncode(bodyMap);
 
     setState(() => _isSaving = true);
 
     try {
-      // ← Use ApiConfig.authHeaders to get token automatically
       final headers = await ApiConfig.authHeaders;
-      print("TOKEN: ${headers['Authorization']}");
 
       final response = await http.post(
-        Uri.parse(ApiConfig.expenses), // ← use centralised URL
+        Uri.parse(ApiConfig.expenses),
         headers: headers,
         body: body,
       );
 
+      debugPrint('Response status    : ${response.statusCode}');
+      debugPrint('Response body      : ${response.body}');
+      debugPrint('════════════════════════════════════════════════');
+
       if (!mounted) return;
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Expense saved!'),
-            backgroundColor: Color(0xFF2D6A5A),
-          ),
+        try {
+          final saved = jsonDecode(response.body);
+          final savedCat = saved['category'] ?? saved['categoryName'] ?? saved['categoryId'] ?? '?';
+          debugPrint('Backend saved category as: $savedCat');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Saved! Backend category: $savedCat'),
+              backgroundColor: const Color(0xFF2D6A5A),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        } catch (_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Expense saved!'), backgroundColor: Color(0xFF2D6A5A)),
+          );
+        }
+        // ── Notify dashboard so all pages update immediately ──
+        widget.onExpenseAdded?.call(
+          _selectedCategory,
+          _merchantController.text.trim(),
+          expenseDate,
+          _noteController.text.trim(),
+          double.tryParse(_amountController.text.trim()) ?? 0.0,
+          _selectedPaymentMethod,
         );
         Navigator.pop(context);
       } else if (response.statusCode == 403) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Session expired. Please log in again.'),
-            backgroundColor: Colors.redAccent,
-          ),
+          const SnackBar(content: Text('Session expired. Please log in again.'), backgroundColor: Colors.redAccent),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -245,11 +324,9 @@ class _AddExpensePageState extends State<AddExpensePage>
       }
     } catch (e) {
       if (!mounted) return;
+      debugPrint('Network error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Network error: $e'),
-          backgroundColor: Colors.redAccent,
-        ),
+        SnackBar(content: Text('Network error: $e'), backgroundColor: Colors.redAccent),
       );
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -257,6 +334,116 @@ class _AddExpensePageState extends State<AddExpensePage>
   }
 
   // ─── Category Helpers ─────────────────────────────────────────────────────
+
+  /// Known merchant → correct category overrides.
+  /// When a scanned bill's merchant matches any key (case-insensitive substring),
+  /// this category is used instead of whatever the AI returned.
+  static const Map<String, String> _merchantCategoryOverrides = {
+    // Medical
+    'apollo'       : 'Medical',
+    'medplus'      : 'Medical',
+    'netmeds'      : 'Medical',
+    'pharmeasy'    : 'Medical',
+    '1mg'          : 'Medical',
+    'practo'       : 'Medical',
+    'fortis'       : 'Medical',
+    'manipal'      : 'Medical',
+    'narayana'     : 'Medical',
+    'max hospital' : 'Medical',
+    'aiims'        : 'Medical',
+    'cipla'        : 'Medical',
+    'clinic'       : 'Medical',
+    'hospital'     : 'Medical',
+    'pharmacy'     : 'Medical',
+    'diagnostic'   : 'Medical',
+    // Food
+    'swiggy'       : 'Food',
+    'zomato'       : 'Food',
+    'udipi'        : 'Food',
+    'udupi'        : 'Food',
+    'dominos'      : 'Food',
+    'pizza hut'    : 'Food',
+    'mcdonald'     : 'Food',
+    'kfc'          : 'Food',
+    'subway'       : 'Food',
+    'burger king'  : 'Food',
+    'starbucks'    : 'Food',
+    'cafe coffee'  : 'Food',
+    'haldiram'     : 'Food',
+    'barbeque'     : 'Food',
+    'restaurant'   : 'Food',
+    'dhaba'        : 'Food',
+    // Travel
+    'ola'          : 'Travel',
+    'uber'         : 'Travel',
+    'rapido'       : 'Travel',
+    'bmtc'         : 'Travel',
+    'irctc'        : 'Travel',
+    'indigo'       : 'Travel',
+    'air india'    : 'Travel',
+    'spicejet'     : 'Travel',
+    'goibibo'      : 'Travel',
+    'makemytrip'   : 'Travel',
+    'redbus'       : 'Travel',
+    'metro'        : 'Travel',
+    'namma metro'  : 'Travel',
+    // Bills / Utilities
+    'bescom'       : 'Bills',
+    'bbmp'         : 'Bills',
+    'bwssb'        : 'Bills',
+    'airtel'       : 'Bills',
+    'jio'          : 'Bills',
+    'bsnl'         : 'Bills',
+    'vodafone'     : 'Bills',
+    'electricity'  : 'Bills',
+    'broadband'    : 'Bills',
+    // Supplies / Groceries
+    'bigbasket'    : 'Supplies',
+    'blinkit'      : 'Supplies',
+    'zepto'        : 'Supplies',
+    'dmart'        : 'Supplies',
+    'reliance fresh': 'Supplies',
+    'spencer'      : 'Supplies',
+    'nilgiris'     : 'Supplies',
+    'amazon'       : 'Supplies',
+    'flipkart'     : 'Supplies',
+    'myntra'       : 'Supplies',
+    'lifestyle'    : 'Supplies',
+    'max fashion'  : 'Supplies',
+    'westside'     : 'Supplies',
+    'nykaa'        : 'Supplies',
+    // Entertainment
+    'pvr'          : 'Entertainment',
+    'inox'         : 'Entertainment',
+    'netflix'      : 'Entertainment',
+    'hotstar'      : 'Entertainment',
+    'amazon prime' : 'Entertainment',
+    'spotify'      : 'Entertainment',
+    'bookmyshow'   : 'Entertainment',
+    // Education
+    'byju'         : 'Education',
+    'unacademy'    : 'Education',
+    'coursera'     : 'Education',
+    'udemy'        : 'Education',
+    'vedantu'      : 'Education',
+    'school'       : 'Education',
+    'college'      : 'Education',
+    'university'   : 'Education',
+    // Rent
+    'rent'         : 'Rent',
+    'hostel'       : 'Rent',
+  };
+
+  /// Checks the merchant name (and optionally extra text) against the override
+  /// table. If matched, returns the correct category label; otherwise falls
+  /// back to [aiCategory] (what the scan AI returned).
+  String _resolveCategoryFromMerchant(String merchant, String aiCategory) {
+    final m = merchant.toLowerCase().trim();
+    for (final entry in _merchantCategoryOverrides.entries) {
+      if (m.contains(entry.key)) return entry.value;
+    }
+    return aiCategory; // AI category trusted only when no override matches
+  }
 
   String _formatCategory(String raw) {
     return raw
@@ -398,14 +585,20 @@ class _AddExpensePageState extends State<AddExpensePage>
       if (response.text != null) {
         final rawJson = jsonDecode(response.text!) as Map<String, dynamic>;
         final data = ScannedReceipt.fromJson(rawJson);
-        final formattedCategory = _formatCategory(data.category);
-        _autoAddCategoryIfNew(formattedCategory, data.category);
+
+        // ── Merchant override: Apollo → Medical, BMTC → Travel, etc. ──────
+        // The AI may mis-classify known merchants. Always check the merchant
+        // name against our lookup table and use that result first.
+        final aiFormattedCategory = _formatCategory(data.category);
+        final overriddenCategory  = _resolveCategoryFromMerchant(data.merchant, aiFormattedCategory);
+
+        _autoAddCategoryIfNew(overriddenCategory, data.category);
 
         setState(() {
           _scanState = ScanState.scanned;
           _scannedReceipt = data;
           _autoFilled = true;
-          _selectedCategory = formattedCategory;
+          _selectedCategory = overriddenCategory; // ← uses override, not raw AI output
           globalScanCount += 1;
         });
 
@@ -606,7 +799,7 @@ class _AddExpensePageState extends State<AddExpensePage>
                       const SizedBox(height: 16),
                       _buildSectionLabel('Date'),
                       const SizedBox(height: 10),
-                      _buildTextField(_dateController, 'e.g. April 25'),
+                      _buildDatePickerField(),
                       const SizedBox(height: 16),
                       _buildSectionLabel('Notes (Optional)'),
                       const SizedBox(height: 10),
@@ -690,55 +883,112 @@ class _AddExpensePageState extends State<AddExpensePage>
 
   void _showAmountInput() {
     final tempController = TextEditingController(text: _amountController.text);
+    DateTime selectedDate = DateTime.now();
+    // Parse existing date if set
+    try {
+      final parsed = DateFormat('MMMM d').parse(_dateController.text.trim());
+      selectedDate = DateTime(DateTime.now().year, parsed.month, parsed.day);
+    } catch (_) {}
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
-      builder: (_) => Padding(
-        padding: EdgeInsets.only(left: 20, right: 20, top: 24, bottom: MediaQuery.of(context).viewInsets.bottom + 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Enter Amount', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 12),
-            TextField(
-              controller: tempController,
-              autofocus: true,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
-              decoration: InputDecoration(
-                prefixText: '₹  ',
-                prefixStyle: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Color(0xFF2D6A5A)),
-                filled: true,
-                fillColor: const Color(0xFFF5F0EB),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2D6A5A),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setSheetState) => Padding(
+          padding: EdgeInsets.only(left: 20, right: 20, top: 24, bottom: MediaQuery.of(context).viewInsets.bottom + 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Enter Amount', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 12),
+              TextField(
+                controller: tempController,
+                autofocus: true,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+                decoration: InputDecoration(
+                  prefixText: '₹  ',
+                  prefixStyle: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Color(0xFF2D6A5A)),
+                  filled: true,
+                  fillColor: const Color(0xFFF5F0EB),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 ),
-                onPressed: () {
-                  setState(() {
-                    _amountController.text = tempController.text;
-                    _autoFilled = false;
-                  });
-                  Navigator.pop(context);
-                },
-                child: const Text('Done', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+              // ── Date Picker ────────────────────────────────────────────
+              const Text('Date', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF8A8A8E))),
+              const SizedBox(height: 8),
+              GestureDetector(
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: selectedDate,
+                    firstDate: DateTime(DateTime.now().year - 2),
+                    lastDate: DateTime(DateTime.now().year + 1),
+                    builder: (context, child) => Theme(
+                      data: Theme.of(context).copyWith(
+                        colorScheme: const ColorScheme.light(
+                          primary: Color(0xFF2D6A5A),
+                          onPrimary: Colors.white,
+                          surface: Colors.white,
+                          onSurface: Color(0xFF1C1C1E),
+                        ), dialogTheme: DialogThemeData(backgroundColor: Colors.white),
+                      ),
+                      child: child!,
+                    ),
+                  );
+                  if (picked != null) {
+                    setSheetState(() => selectedDate = picked);
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF5F0EB),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.calendar_today_outlined, size: 18, color: Color(0xFF2D6A5A)),
+                      const SizedBox(width: 10),
+                      Text(
+                        DateFormat('MMMM d, yyyy').format(selectedDate),
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Color(0xFF1C1C1E)),
+                      ),
+                      const Spacer(),
+                      const Icon(Icons.chevron_right, size: 18, color: Color(0xFFAAAAAA)),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2D6A5A),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _amountController.text = tempController.text;
+                      _dateController.text = DateFormat('MMMM d').format(selectedDate);
+                      _autoFilled = false;
+                    });
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Done', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -929,6 +1179,74 @@ class _AddExpensePageState extends State<AddExpensePage>
           hintStyle: TextStyle(color: Color(0xFFB0B0B5), fontSize: 14),
           border: InputBorder.none, isDense: true,
           contentPadding: EdgeInsets.symmetric(vertical: 12),
+        ),
+      ),
+    );
+  }
+
+  // ─── Date Picker Field ────────────────────────────────────────────────────
+
+  Future<void> _pickDate() async {
+    // Parse existing date if any
+    DateTime initial = DateTime.now();
+    try {
+      final parsed = DateFormat('MMMM d').parse(_dateController.text.trim());
+      initial = DateTime(DateTime.now().year, parsed.month, parsed.day);
+    } catch (_) {}
+
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(DateTime.now().year - 2),
+      lastDate: DateTime(DateTime.now().year + 1),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF2D6A5A),
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Color(0xFF1C1C1E),
+            ), dialogTheme: DialogThemeData(backgroundColor: Colors.white),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        _dateController.text = DateFormat('MMMM d').format(picked);
+      });
+    }
+  }
+
+  Widget _buildDatePickerField() {
+    return GestureDetector(
+      onTap: _pickDate,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE5E0D8), width: 0.8),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                _dateController.text.isEmpty ? 'e.g. April 25' : _dateController.text,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: _dateController.text.isEmpty
+                      ? const Color(0xFFB0B0B5)
+                      : const Color(0xFF1C1C1E),
+                ),
+              ),
+            ),
+            const Icon(Icons.calendar_today_outlined, size: 18, color: Color(0xFF2D6A5A)),
+          ],
         ),
       ),
     );

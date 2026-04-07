@@ -4,6 +4,7 @@ import '../../colors/app_colors.dart';
 import '../../constants/app_strings.dart';
 import '../../fonts/app_text_styles.dart';
 import '../../services/auth_service.dart';
+import '../../services/auth_state.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/primary_button.dart';
 import 'sign_up_screen.dart';
@@ -18,13 +19,13 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _formKey          = GlobalKey<FormState>();
+  final _emailController  = TextEditingController();
   final _passwordController = TextEditingController();
-  final _authService = AuthService();
-  bool _isLoading = false;
-  bool _emailTouched = false;
-  bool _passwordTouched = false;
+  final _authService      = AuthService();
+  bool _isLoading         = false;
+  bool _emailTouched      = false;
+  bool _passwordTouched   = false;
 
   @override
   void dispose() {
@@ -35,7 +36,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
   Future<void> _handleSignIn() async {
     setState(() {
-      _emailTouched = true;
+      _emailTouched    = true;
       _passwordTouched = true;
     });
     if (!_formKey.currentState!.validate()) return;
@@ -44,14 +45,23 @@ class _SignInScreenState extends State<SignInScreen> {
 
     try {
       final response = await _authService.signIn(
-        email: _emailController.text.trim(),
+        email:    _emailController.text.trim(),
         password: _passwordController.text,
       );
 
+      // ✅ FIX 1: Populate AuthState FIRST — this is synchronous and instant.
+      //           DashboardService.fetchAll() reads ApiConfig.authHeaders which
+      //           checks AuthState.token before SharedPreferences, so the token
+      //           is guaranteed to be available the moment the Dashboard loads,
+      //           with no async race condition.
+      AuthState.setToken(response.token, userName: response.user.fullName);
+
+      // ✅ FIX 2: Persist to SharedPreferences for cold-start / page-refresh survival.
+      //           (main() reads this back into AuthState before runApp on next launch)
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('auth_token', response.token);
       await prefs.setString('user_email', response.user.email);
-      await prefs.setString('user_name', response.user.fullName);
+      await prefs.setString('user_name',  response.user.fullName);
 
       if (mounted) {
         Navigator.pushReplacement(
@@ -115,19 +125,17 @@ class _SignInScreenState extends State<SignInScreen> {
 
                         // Email field
                         CustomTextField(
-                          label: AppStrings.emailLabel,
-                          hint: AppStrings.emailHint,
-                          controller: _emailController,
+                          label:       AppStrings.emailLabel,
+                          hint:        AppStrings.emailHint,
+                          controller:  _emailController,
                           keyboardType: TextInputType.emailAddress,
                           prefixIcon: const Icon(Icons.email_outlined,
                               color: AppColors.textMedium, size: 20),
                           textInputAction: TextInputAction.next,
                           onChanged: (v) {
-                            // Mark touched as soon as user starts typing
                             if (!_emailTouched) {
                               setState(() => _emailTouched = true);
                             }
-                            // Trigger live validation
                             _formKey.currentState?.validate();
                           },
                           validator: _emailTouched
@@ -148,8 +156,8 @@ class _SignInScreenState extends State<SignInScreen> {
 
                         // Password field
                         CustomTextField(
-                          label: AppStrings.passwordLabel,
-                          hint: AppStrings.passwordHint,
+                          label:      AppStrings.passwordLabel,
+                          hint:       AppStrings.passwordHint,
                           controller: _passwordController,
                           isPassword: true,
                           prefixIcon: const Icon(Icons.lock_outline,
@@ -192,7 +200,7 @@ class _SignInScreenState extends State<SignInScreen> {
                             child: Text(
                               AppStrings.forgotPassword,
                               style: AppTextStyles.body.copyWith(
-                                color: AppColors.primary,
+                                color:      AppColors.primary,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -202,7 +210,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         const SizedBox(height: 24),
 
                         PrimaryButton(
-                          label: AppStrings.signIn,
+                          label:     AppStrings.signIn,
                           isLoading: _isLoading,
                           onPressed: _handleSignIn,
                         ),
@@ -226,7 +234,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                     child: Text(
                                       AppStrings.signUpLink,
                                       style: AppTextStyles.body.copyWith(
-                                        color: AppColors.primary,
+                                        color:      AppColors.primary,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),

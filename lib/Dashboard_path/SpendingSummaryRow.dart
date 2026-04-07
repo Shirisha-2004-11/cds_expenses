@@ -1,4 +1,10 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// lib/Dashboard_path/SpendingSummaryRow.dart  (UPDATED — fully dynamic)
+// ─────────────────────────────────────────────────────────────────────────────
+
 import 'package:flutter/material.dart';
+import '../services/expense_provider.dart';
+import 'InsightsCards.dart';
 
 // ─── Helper ──────────────────────────────────────────────────────────────────
 
@@ -18,10 +24,21 @@ String fmtINR(double n) {
 // ─── Spending Summary Row ─────────────────────────────────────────────────────
 
 class SpendingSummaryRow extends StatelessWidget {
-  const SpendingSummaryRow({super.key});
+  final ExpenseProvider provider;
+
+  const SpendingSummaryRow({super.key, required this.provider});
 
   @override
   Widget build(BuildContext context) {
+    final highest   = provider.highestCategory;
+    final dailyAvg  = provider.dailyAverage;
+    final now       = DateTime.now();
+    final monthNames = const [
+      '', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    final monthLabel = monthNames[now.month];
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -31,49 +48,31 @@ class SpendingSummaryRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Title
                 const Text(
                   'Highest spending category',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    color: Color(0xFF8FAA98),
-                    fontWeight: FontWeight.w400,
-                    height: 1.3,
-                  ),
+                  style: TextStyle(fontSize: 12.5, color: Color(0xFF8FAA98), fontWeight: FontWeight.w400, height: 1.3),
                 ),
                 const SizedBox(height: 10),
-
-                // Amount
-                const Text(
-                  '₹ 4,050',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1A2E22),
-                    letterSpacing: -0.3,
-                    fontFeatures: [FontFeature.tabularFigures()],
+                Text(
+                  highest != null ? fmtINR(highest.value) : '₹ 0',
+                  style: const TextStyle(
+                    fontSize: 22, fontWeight: FontWeight.w700, color: Color(0xFF1A2E22),
+                    letterSpacing: -0.3, fontFeatures: [FontFeature.tabularFigures()],
                   ),
                 ),
                 const SizedBox(height: 2),
-
-                // Category
-                const Text(
-                  'Food',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF4A6358),
-                    fontWeight: FontWeight.w500,
-                  ),
+                Text(
+                  highest?.key ?? 'None yet',
+                  style: const TextStyle(fontSize: 13, color: Color(0xFF4A6358), fontWeight: FontWeight.w500),
                 ),
-
                 const Spacer(),
-
-                // Divider
                 const Divider(color: Color(0xFFECF2EE), height: 1),
                 const SizedBox(height: 10),
-
-                // Tag pill
-                _TagPill(label: '+380 /day in march'),
+                _TagPill(
+                  label: highest != null
+                      ? '${fmtINR(highest.value / now.day)}/day in $monthLabel'
+                      : 'No data yet',
+                ),
               ],
             ),
           ),
@@ -87,60 +86,33 @@ class SpendingSummaryRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Title
                 const Text(
-                  'Daily Spending . Avg',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    color: Color(0xFF8FAA98),
-                    fontWeight: FontWeight.w400,
-                    height: 1.3,
-                  ),
+                  'Daily Spending · Avg',
+                  style: TextStyle(fontSize: 12.5, color: Color(0xFF8FAA98), fontWeight: FontWeight.w400, height: 1.3),
                 ),
                 const SizedBox(height: 10),
-
-                // Amount + /day
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.baseline,
                   textBaseline: TextBaseline.alphabetic,
-                  children: const [
+                  children: [
                     Text(
-                      '₹ 482',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF1A2E22),
-                        letterSpacing: -0.3,
-                        fontFeatures: [FontFeature.tabularFigures()],
+                      fmtINR(dailyAvg),
+                      style: const TextStyle(
+                        fontSize: 22, fontWeight: FontWeight.w700, color: Color(0xFF1A2E22),
+                        letterSpacing: -0.3, fontFeatures: [FontFeature.tabularFigures()],
                       ),
                     ),
-                    SizedBox(width: 4),
-                    Text(
-                      '/day',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF8FAA98),
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
+                    const SizedBox(width: 4),
+                    const Text('/day', style: TextStyle(fontSize: 13, color: Color(0xFF8FAA98), fontWeight: FontWeight.w400)),
                   ],
                 ),
                 const SizedBox(height: 4),
-
-                // Subtitle
-                const Text(
-                  '+410/day in march',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF8FAA98),
-                    fontWeight: FontWeight.w400,
-                  ),
+                Text(
+                  '${fmtINR(dailyAvg)}/day in $monthLabel',
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF8FAA98), fontWeight: FontWeight.w400),
                 ),
-
                 const Spacer(),
-
-                // View button
-                _ViewButton(),
+                _ViewButton(provider: provider),
               ],
             ),
           ),
@@ -163,13 +135,7 @@ class _SummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0F2A7A50),
-            blurRadius: 20,
-            offset: Offset(0, 4),
-          ),
-        ],
+        boxShadow: const [BoxShadow(color: Color(0x0F2A7A50), blurRadius: 20, offset: Offset(0, 4))],
       ),
       child: child,
     );
@@ -193,12 +159,7 @@ class _TagPill extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: const TextStyle(
-          fontSize: 11.5,
-          color: Color(0xFF4A6358),
-          fontWeight: FontWeight.w500,
-          fontFeatures: [FontFeature.tabularFigures()],
-        ),
+        style: const TextStyle(fontSize: 11.5, color: Color(0xFF4A6358), fontWeight: FontWeight.w500, fontFeatures: [FontFeature.tabularFigures()]),
       ),
     );
   }
@@ -207,27 +168,25 @@ class _TagPill extends StatelessWidget {
 // ─── View Button ─────────────────────────────────────────────────────────────
 
 class _ViewButton extends StatelessWidget {
+  final ExpenseProvider provider;
+  const _ViewButton({required this.provider});
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
       child: TextButton(
-        onPressed: () {},
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => SpendingInsightsScreen(provider: provider)),
+        ),
         style: TextButton.styleFrom(
           backgroundColor: const Color(0xFFE4F2EA),
           foregroundColor: const Color(0xFF2A7A50),
           padding: const EdgeInsets.symmetric(vertical: 10),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
-        child: const Text(
-          'View',
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        child: const Text('View', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
       ),
     );
   }

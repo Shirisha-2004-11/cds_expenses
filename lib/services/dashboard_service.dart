@@ -90,7 +90,6 @@ class ExpenseItem {
     );
   }
 
-  // ── Fixed: every if-branch now has curly braces ───────────────────────────
   static IconData _iconFor(String cat) {
     final c = cat.toLowerCase();
     if (c.contains('food') || c.contains('swiggy') || c.contains('zomato')) {
@@ -107,15 +106,9 @@ class ExpenseItem {
 
   static Color _colorFor(String cat) {
     final c = cat.toLowerCase();
-    if (c.contains('food')) {
-      return const Color(0xFFFF6B6B);
-    }
-    if (c.contains('travel')) {
-      return const Color(0xFF4FC3F7);
-    }
-    if (c.contains('bill')) {
-      return const Color(0xFFFFB347);
-    }
+    if (c.contains('food')) return const Color(0xFFFF6B6B);
+    if (c.contains('travel')) return const Color(0xFF4FC3F7);
+    if (c.contains('bill')) return const Color(0xFFFFB347);
     return const Color(0xFF81C784);
   }
 
@@ -146,13 +139,19 @@ class ChartData {
   final List<String> days;
   ChartData({required this.values, required this.days});
 
-  factory ChartData.fromJson(List<dynamic> json) {
-    final values = json
-        .map((e) => (e['amount'] ?? e['value'] ?? 0).toDouble())
+  factory ChartData.fromJson(dynamic json) {
+    List<dynamic> list = [];
+    if (json is List) {
+      list = json;
+    } else if (json is Map && json.containsKey('data')) {
+      list = json['data'] as List<dynamic>;
+    }
+    final values = list
+        .map((e) => (e['amount'] ?? e['value'] ?? e['total'] ?? 0).toDouble())
         .toList()
         .cast<double>();
-    final days = json
-        .map((e) => (e['day'] ?? e['label'] ?? '').toString())
+    final days = list
+        .map((e) => (e['month'] ?? e['day'] ?? e['label'] ?? '').toString())
         .toList()
         .cast<String>();
     return ChartData(values: values, days: days);
@@ -189,45 +188,85 @@ class DashboardData {
 
 class DashboardService {
   static Future<DashboardData> fetchAll() async {
+    final headers = await ApiConfig.authHeaders;
+
+    // FIX: each call is independent — one failure won't kill the others
+    final results = await Future.wait([
+      _getSafe(ApiConfig.budgetSummary,  headers),
+      _getSafe(ApiConfig.insights,       headers),
+      _getSafe(ApiConfig.recentExpenses, headers),
+      _getSafe(ApiConfig.dailyChart,     headers),
+    ]);
+
+    // Budget
+    BudgetSummary budget;
     try {
-      final headers = await ApiConfig.authHeaders;
-
-      final results = await Future.wait([
-        _get(ApiConfig.budgetSummary,   headers),
-        _get(ApiConfig.insights,        headers),
-        _get(ApiConfig.recentExpenses,  headers),
-        _get(ApiConfig.dailyChart,      headers),
-      ]);
-
-      final budget  = BudgetSummary.fromJson(results[0] as Map<String, dynamic>);
-      final insight = (results[1] as List)
-          .map((e) => InsightItem.fromJson(e))
-          .toList();
-      final recent  = (results[2] as List)
-          .map((e) => ExpenseItem.fromJson(e))
-          .toList();
-      final chart   = ChartData.fromJson(results[3] as List);
-
-      return DashboardData(
-        budget:         budget,
-        insights:       insight,
-        recentExpenses: recent,
-        chartData:      chart,
-      );
+      budget = BudgetSummary.fromJson(results[0] as Map<String, dynamic>);
     } catch (e) {
-      debugPrint('DashboardService.fetchAll error: $e');
-      return DashboardData.mock();
+      debugPrint('Budget parse error: $e');
+      budget = BudgetSummary.mock();
     }
+
+    // Insights
+    List<InsightItem> insights;
+    try {
+      final raw = results[1];
+      final list = raw is List
+          ? raw
+          : (raw as Map?)?['data'] as List? ?? [];
+      insights = list.map((e) => InsightItem.fromJson(e as Map<String, dynamic>)).toList();
+      debugPrint('Insights loaded: ${insights.length} items');
+    } catch (e) {
+      debugPrint('Insights parse error: $e');
+      insights = InsightItem.mockList();
+    }
+
+    // Recent expenses
+    List<ExpenseItem> recent;
+    try {
+      final raw = results[2];
+      final list = raw is List
+          ? raw
+          : (raw as Map?)?['data'] as List? ?? [];
+      recent = list.map((e) => ExpenseItem.fromJson(e as Map<String, dynamic>)).toList();
+      debugPrint('Recent expenses loaded: ${recent.length} items');
+    } catch (e) {
+      debugPrint('Recent expenses parse error: $e');
+      recent = ExpenseItem.mockList();
+    }
+
+    // Chart
+    ChartData chart;
+    try {
+      chart = ChartData.fromJson(results[3]);
+    } catch (e) {
+      debugPrint('Chart parse error: $e');
+      chart = ChartData.mock();
+    }
+
+    return DashboardData(
+      budget:         budget,
+      insights:       insights,
+      recentExpenses: recent,
+      chartData:      chart,
+    );
   }
 
-  static Future<dynamic> _get(String url, Map<String, String> headers) async {
-    final response = await http
-        .get(Uri.parse(url), headers: headers)
-        .timeout(const Duration(seconds: 15));
+  // Returns null instead of throwing — so one bad endpoint won't crash fetchAll
+  static Future<dynamic> _getSafe(String url, Map<String, String> headers) async {
+    try {
+      final response = await http
+          .get(Uri.parse(url), headers: headers)
+          .timeout(const Duration(seconds: 15));
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return jsonDecode(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return jsonDecode(response.body);
+      }
+      debugPrint('GET $url failed: ${response.statusCode} — ${response.body}');
+      return null;
+    } catch (e) {
+      debugPrint('GET $url error: $e');
+      return null;
     }
-    throw Exception('GET $url failed: ${response.statusCode}');
   }
 }

@@ -8,7 +8,6 @@ import 'package:provider/provider.dart';
 import 'Monthly_analystics.dart';
 import 'SpendingSummaryRow.dart';
 import 'Greating_header.dart';
-import 'monthly_progress.dart';
 import 'ExpenseScreen.dart';
 import 'Expenses_History.dart';
 import 'InsightsCards.dart';
@@ -63,11 +62,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             const GreetingHeader(),
             const SizedBox(height: 12),
-            BudgetProgressCard(
-              totalBudget: p.totalBudget,
-              totalSpent:  p.totalSpentThisMonth,
-            ),
-            const SizedBox(height: 12),
             MonthlyAnalyticsCard(monthlyTrend: p.monthlyTrend),
             const SizedBox(height: 12),
             Padding(
@@ -89,10 +83,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     switch (cat.toLowerCase()) {
       case 'food':          return Icons.fastfood;
       case 'travel':        return Icons.directions_car;
-      case 'supplies':      return Icons.shopping_bag;
+      case 'supplies':      return Icons.shopping_cart;
       case 'bills':         return Icons.receipt_long;
-      case 'medical':       return Icons.local_pharmacy;
       case 'entertainment': return Icons.movie;
+      case 'medical':       return Icons.local_pharmacy;
+      case 'education':     return Icons.school;
+      case 'rent':          return Icons.home;
+      case 'petrol':        return Icons.local_gas_station;
+      case 'electricity':   return Icons.electric_bolt;
+      case 'home services': return Icons.home_repair_service;
       default:              return Icons.category;
     }
   }

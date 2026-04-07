@@ -17,18 +17,33 @@ class RecentExpensesPage extends StatefulWidget {
 class _RecentExpensesPageState extends State<RecentExpensesPage> {
   String _selectedFilter = 'All';
 
-  static const _filters = ['All', 'Food', 'Travel', 'Bills', 'Supplies', 'Medical', 'Entertainment', 'Other'];
+  static const _filters = [
+    'All',
+    'Food',
+    'Travel',
+    'Supplies',
+    'Bills',
+    'Entertainment',
+    'Medical',
+    'Education',
+    'Rent',
+    'Petrol',
+    'Electricity',
+    'Home Services',
+  ];
 
   List<Expense> get _filtered {
     final all = widget.provider.allExpenses;
     if (_selectedFilter == 'All') return all;
-    return all.where((e) => e.category.toLowerCase() == _selectedFilter.toLowerCase()).toList();
+    return all
+        .where((e) => e.category.toLowerCase() == _selectedFilter.toLowerCase())
+        .toList();
   }
 
   @override
   Widget build(BuildContext context) {
     final expenses = _filtered;
-    final total    = expenses.fold(0.0, (s, e) => s + e.amount);
+    final total = expenses.fold(0.0, (s, e) => s + e.amount);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FC),
@@ -36,18 +51,34 @@ class _RecentExpensesPageState extends State<RecentExpensesPage> {
         backgroundColor: Colors.white,
         elevation: 0.5,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 18, color: Color(0xFF1A1A2E)),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            size: 18,
+            color: Color(0xFF1A1A2E),
+          ),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('All Expenses',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Color(0xFF1A1A2E))),
+        title: const Text(
+          'All Expenses',
+          style: TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF1A1A2E),
+          ),
+        ),
         centerTitle: true,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: Center(
-              child: Text('₹ ${total.toStringAsFixed(0)}',
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF2A7A50))),
+              child: Text(
+                '₹ ${total.toStringAsFixed(0)}',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF2A7A50),
+                ),
+              ),
             ),
           ),
         ],
@@ -63,23 +94,35 @@ class _RecentExpensesPageState extends State<RecentExpensesPage> {
               itemCount: _filters.length,
               separatorBuilder: (_, __) => const SizedBox(width: 8),
               itemBuilder: (_, i) {
-                final f        = _filters[i];
+                final f = _filters[i];
                 final isActive = f == _selectedFilter;
                 return GestureDetector(
                   onTap: () => setState(() => _selectedFilter = f),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 180),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: isActive ? const Color(0xFF1A1A2E) : Colors.white,
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: isActive ? const Color(0xFF1A1A2E) : const Color(0xFFDDDDDD)),
+                      border: Border.all(
+                        color: isActive
+                            ? const Color(0xFF1A1A2E)
+                            : const Color(0xFFDDDDDD),
+                      ),
                     ),
-                    child: Text(f,
-                        style: TextStyle(
-                          fontSize: 13, fontWeight: FontWeight.w500,
-                          color: isActive ? Colors.white : const Color(0xFF666666),
-                        )),
+                    child: Text(
+                      f,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: isActive
+                            ? Colors.white
+                            : const Color(0xFF666666),
+                      ),
+                    ),
                   ),
                 );
               },
@@ -93,19 +136,31 @@ class _RecentExpensesPageState extends State<RecentExpensesPage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.receipt_long_outlined, size: 56, color: Colors.grey.shade300),
+                        Icon(
+                          Icons.receipt_long_outlined,
+                          size: 56,
+                          color: Colors.grey.shade300,
+                        ),
                         const SizedBox(height: 12),
                         Text(
-                          _selectedFilter == 'All' ? 'No expenses yet' : 'No $_selectedFilter expenses',
-                          style: const TextStyle(fontSize: 15, color: Colors.grey),
+                          _selectedFilter == 'All'
+                              ? 'No expenses yet'
+                              : 'No $_selectedFilter expenses',
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: Colors.grey,
+                          ),
                         ),
                       ],
                     ),
                   )
                 : ListView.separated(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     itemCount: expenses.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
                     itemBuilder: (_, i) => _ExpenseTile(expense: expenses[i]),
                   ),
           ),
@@ -123,14 +178,18 @@ class _ExpenseTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final e     = expense;
+    final e = expense;
     final today = DateTime.now();
-    final d     = e.parsedDate;
+    final d = e.parsedDate;
     String dateLabel = e.date;
     if (d != null) {
-      if (d.year == today.year && d.month == today.month && d.day == today.day) {
+      if (d.year == today.year &&
+          d.month == today.month &&
+          d.day == today.day) {
         dateLabel = 'Today';
-      } else if (d.year == today.year && d.month == today.month && d.day == today.day - 1) {
+      } else if (d.year == today.year &&
+          d.month == today.month &&
+          d.day == today.day - 1) {
         dateLabel = 'Yesterday';
       } else {
         dateLabel = '${d.day}/${d.month}/${d.year}';
@@ -142,13 +201,23 @@ class _ExpenseTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
           Container(
-            width: 44, height: 44,
-            decoration: BoxDecoration(color: e.color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: e.color.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: Icon(e.icon, color: e.color, size: 22),
           ),
           const SizedBox(width: 14),
@@ -156,20 +225,34 @@ class _ExpenseTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(e.merchant.isNotEmpty ? e.merchant : e.category,
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1A1A2E))),
+                Text(
+                  e.merchant.isNotEmpty ? e.merchant : e.category,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1A1A2E),
+                  ),
+                ),
                 const SizedBox(height: 2),
                 Row(
                   children: [
                     _Chip(label: e.category, color: e.color),
                     const SizedBox(width: 6),
-                    Text(dateLabel, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                    Text(
+                      dateLabel,
+                      style: const TextStyle(fontSize: 11, color: Colors.grey),
+                    ),
                     if (e.note.isNotEmpty) ...[
                       const SizedBox(width: 6),
                       Expanded(
-                        child: Text('· ${e.note}',
-                            style: const TextStyle(fontSize: 11, color: Colors.grey),
-                            overflow: TextOverflow.ellipsis),
+                        child: Text(
+                          '· ${e.note}',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ],
@@ -181,10 +264,18 @@ class _ExpenseTile extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text('-₹ ${e.amount.toStringAsFixed(0)}',
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFFE53935))),
-              Text(e.paymentMethod.replaceAll('_', ' '),
-                  style: const TextStyle(fontSize: 10, color: Colors.grey)),
+              Text(
+                '-₹ ${e.amount.toStringAsFixed(0)}',
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFFE53935),
+                ),
+              ),
+              Text(
+                e.paymentMethod.replaceAll('_', ' '),
+                style: const TextStyle(fontSize: 10, color: Colors.grey),
+              ),
             ],
           ),
         ],
@@ -197,7 +288,7 @@ class _ExpenseTile extends StatelessWidget {
 
 class _Chip extends StatelessWidget {
   final String label;
-  final Color  color;
+  final Color color;
   const _Chip({required this.label, required this.color});
 
   @override
@@ -208,7 +299,14 @@ class _Chip extends StatelessWidget {
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(6),
       ),
-      child: Text(label, style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w600)),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }

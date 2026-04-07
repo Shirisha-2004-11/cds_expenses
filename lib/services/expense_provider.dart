@@ -14,7 +14,7 @@ class Expense {
   final String id;
   final String category;
   final String merchant;
-  final String date;        // ISO-8601 string  e.g. "2025-04-07"
+  final String date; // ISO-8601 string  e.g. "2025-04-07"
   final String note;
   final double amount;
   final String paymentMethod;
@@ -31,70 +31,105 @@ class Expense {
 
   /// Build from the API map returned by /expenses endpoint
   factory Expense.fromJson(Map<String, dynamic> j) {
-    final cat  = (j['category']     ?? j['categoryName'] ?? 'Other').toString();
-    final merch= (j['merchant']     ?? j['description']  ?? cat).toString();
-    final date = (j['expenseDate']  ?? j['date']         ?? '').toString();
-    final amt  = (j['amount']       ?? 0).toDouble();
-    final pay  = (j['paymentMethod']?? 'UPI').toString();
-    final note = (j['note']         ?? j['subtitle']     ?? '').toString();
-    final id   = (j['id']           ?? j['expenseId']    ?? UniqueKey().toString()).toString();
+    final cat = (j['category'] ?? j['categoryName'] ?? 'Other').toString();
+    final merch = (j['merchant'] ?? j['description'] ?? cat).toString();
+    final date = (j['expenseDate'] ?? j['date'] ?? '').toString();
+    final amt = (j['amount'] ?? 0).toDouble();
+    final pay = (j['paymentMethod'] ?? 'UPI').toString();
+    final note = (j['note'] ?? j['subtitle'] ?? '').toString();
+    final id = (j['id'] ?? j['expenseId'] ?? UniqueKey().toString()).toString();
 
     return Expense(
-      id:            id,
-      category:      cat,
-      merchant:      merch,
-      date:          date,
-      note:          note,
-      amount:        amt,
+      id: id,
+      category: cat,
+      merchant: merch,
+      date: date,
+      note: note,
+      amount: amt,
       paymentMethod: pay,
     );
   }
 
   IconData get icon {
     switch (category.toLowerCase()) {
-      case 'food':         return Icons.fastfood;
-      case 'travel':       return Icons.directions_car;
-      case 'bills':        return Icons.receipt_long;
-      case 'medical':      return Icons.local_pharmacy;
-      case 'entertainment':return Icons.movie;
-      case 'education':    return Icons.school;
-      case 'rent':         return Icons.home;
-      default:             return Icons.shopping_bag;
+      case 'food':
+        return Icons.fastfood;
+      case 'travel':
+        return Icons.directions_car;
+      case 'supplies':
+        return Icons.shopping_cart;
+      case 'bills':
+        return Icons.receipt_long;
+      case 'entertainment':
+        return Icons.movie;
+      case 'medical':
+        return Icons.local_pharmacy;
+      case 'education':
+        return Icons.school;
+      case 'rent':
+        return Icons.home;
+      case 'petrol':
+        return Icons.local_gas_station;
+      case 'electricity':
+        return Icons.electric_bolt;
+      case 'home services':
+        return Icons.home_repair_service;
+      default:
+        return Icons.category;
     }
   }
 
   Color get color {
     switch (category.toLowerCase()) {
-      case 'food':         return const Color(0xFFFF6B6B);
-      case 'travel':       return const Color(0xFF4FC3F7);
-      case 'bills':        return const Color(0xFFFFB347);
-      case 'medical':      return const Color(0xFF81C784);
-      case 'entertainment':return const Color(0xFFCE93D8);
-      case 'education':    return const Color(0xFF4DB6AC);
-      case 'rent':         return const Color(0xFFFFD54F);
-      default:             return const Color(0xFFA5D6A7);
+      case 'food':
+        return const Color(0xFFFF6B6B);
+      case 'travel':
+        return const Color(0xFF4FC3F7);
+      case 'supplies':
+        return const Color(0xFFEFA169);
+      case 'bills':
+        return const Color(0xFFFFB347);
+      case 'entertainment':
+        return const Color(0xFFCE93D8);
+      case 'medical':
+        return const Color(0xFF81C784);
+      case 'education':
+        return const Color(0xFF4DB6AC);
+      case 'rent':
+        return const Color(0xFFFFD54F);
+      case 'petrol':
+        return const Color(0xFFFF8A65);
+      case 'electricity':
+        return const Color(0xFFFDD835);
+      case 'home services':
+        return const Color(0xFF90CAF9);
+      default:
+        return const Color(0xFF90A4AE);
     }
   }
 
   DateTime? get parsedDate {
-    try { return DateTime.parse(date); } catch (_) { return null; }
+    try {
+      return DateTime.parse(date);
+    } catch (_) {
+      return null;
+    }
   }
 }
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
 class ExpenseProvider extends ChangeNotifier {
-
   // ── Raw state ──────────────────────────────────────────────────────────────
-  List<Expense> _expenses    = [];
-  double        _totalBudget = 0;
-  bool          _loading     = true;
-  String?       _error;
+  List<Expense> _expenses = [];
+  double _totalBudget = 0;
+  bool _loading = true;
+  String? _error;
 
   // ── Public getters ─────────────────────────────────────────────────────────
-  bool          get loading     => _loading;
-  String?       get error       => _error;
-  double        get totalBudget => _totalBudget;
+  bool get loading => _loading;
+  String? get error => _error;
+  double get totalBudget => _totalBudget;
 
   List<Expense> get allExpenses => List.unmodifiable(_expenses);
 
@@ -153,10 +188,10 @@ class ExpenseProvider extends ChangeNotifier {
   List<Map<String, dynamic>> get last10DaysChart {
     final today = DateTime.now();
     return List.generate(10, (i) {
-      final day  = today.subtract(Duration(days: 9 - i));
-      final key  = day.day;
-      final val  = dailySpendingMap[key] ?? 0.0;
-      final lbl  = '${key}';
+      final day = today.subtract(Duration(days: 9 - i));
+      final key = day.day;
+      final val = dailySpendingMap[key] ?? 0.0;
+      final lbl = '${key}';
       return {'label': lbl, 'value': val, 'date': day};
     });
   }
@@ -168,47 +203,99 @@ class ExpenseProvider extends ChangeNotifier {
     return List.generate(5, (i) {
       final monthOffset = 4 - i;
       final target = DateTime(now.year, now.month - monthOffset, 1);
-      final total  = _expenses.where((e) {
-        final d = e.parsedDate;
-        return d != null && d.year == target.year && d.month == target.month;
-      }).fold(0.0, (s, e) => s + e.amount);
+      final total = _expenses
+          .where((e) {
+            final d = e.parsedDate;
+            return d != null &&
+                d.year == target.year &&
+                d.month == target.month;
+          })
+          .fold(0.0, (s, e) => s + e.amount);
 
-      final shortNames = ['Jan','Feb','Mar','Apr','May','Jun',
-                          'Jul','Aug','Sep','Oct','Nov','Dec'];
-      final longNames  = ['JAN','FEB','MAR','APR','MAY','JUN',
-                          'JUL','AUG','SEP','OCT','NOV','DEC'];
+      final shortNames = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
+      final longNames = [
+        'JAN',
+        'FEB',
+        'MAR',
+        'APR',
+        'MAY',
+        'JUN',
+        'JUL',
+        'AUG',
+        'SEP',
+        'OCT',
+        'NOV',
+        'DEC',
+      ];
 
       return {
-        'month'     : longNames[target.month - 1],
+        'month': longNames[target.month - 1],
         'shortMonth': shortNames[target.month - 1],
-        'amount'    : total,
-        'year'      : target.year,
-        'monthNum'  : target.month,
+        'amount': total,
+        'year': target.year,
+        'monthNum': target.month,
       };
     });
   }
 
   // ── Weekly total ───────────────────────────────────────────────────────────
   double get thisWeekTotal {
-    final now   = DateTime.now();
+    final now = DateTime.now();
     final start = now.subtract(Duration(days: now.weekday - 1));
-    return _expenses.where((e) {
-      final d = e.parsedDate;
-      return d != null && !d.isBefore(DateTime(start.year, start.month, start.day));
-    }).fold(0.0, (s, e) => s + e.amount);
+    return _expenses
+        .where((e) {
+          final d = e.parsedDate;
+          return d != null &&
+              !d.isBefore(DateTime(start.year, start.month, start.day));
+        })
+        .fold(0.0, (s, e) => s + e.amount);
   }
 
-  // ── Insight items (for donut chart) ───────────────────────────────────────
+  // ── Category breakdown (ALL expenses) ─────────────────────────────────────
+  Map<String, double> get categoryTotalsAll {
+    final map = <String, double>{};
+    for (final e in _expenses) {
+      map[e.category] = (map[e.category] ?? 0) + e.amount;
+    }
+    return map;
+  }
+
+  /// Sorted by amount descending (all expenses)
+  List<MapEntry<String, double>> get sortedCategoriesAll {
+    final entries = categoryTotalsAll.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    return entries;
+  }
+
+  // ── Insight items (for donut chart) — uses ALL expenses ───────────────────
   List<Map<String, dynamic>> get insightItems {
-    return sortedCategories.map((entry) {
+    return sortedCategoriesAll.map((entry) {
       final dummy = Expense(
-        id: '', category: entry.key, merchant: '', date: '',
-        note: '', amount: 0, paymentMethod: '',
+        id: '',
+        category: entry.key,
+        merchant: '',
+        date: '',
+        note: '',
+        amount: 0,
+        paymentMethod: '',
       );
       return {
-        'label' : entry.key,
+        'label': entry.key,
         'amount': entry.value.toInt(),
-        'color' : dummy.color,
+        'color': dummy.color,
       };
     }).toList();
   }
@@ -227,22 +314,26 @@ class ExpenseProvider extends ChangeNotifier {
   // ── Load from API ──────────────────────────────────────────────────────────
   Future<void> loadAll() async {
     _loading = true;
-    _error   = null;
+    _error = null;
     notifyListeners();
 
     try {
       final data = await DashboardService.fetchAll();
 
       // Convert service models → unified Expense list
-      _expenses = data.recentExpenses.map((e) => Expense(
-        id:            UniqueKey().toString(),
-        category:      e.category,
-        merchant:      e.category,
-        date:          _todayIso(),
-        note:          e.subtitle,
-        amount:        e.amount.toDouble(),
-        paymentMethod: 'UPI',
-      )).toList();
+      _expenses = data.recentExpenses
+          .map(
+            (e) => Expense(
+              id: UniqueKey().toString(),
+              category: e.category,
+              merchant: e.category,
+              date: _todayIso(),
+              note: e.subtitle,
+              amount: e.amount.toDouble(),
+              paymentMethod: 'UPI',
+            ),
+          )
+          .toList();
 
       _totalBudget = data.budget.totalBudget;
     } catch (e) {
@@ -265,15 +356,18 @@ class ExpenseProvider extends ChangeNotifier {
     required double amount,
     required String paymentMethod,
   }) {
-    _expenses.insert(0, Expense(
-      id:            DateTime.now().millisecondsSinceEpoch.toString(),
-      category:      category,
-      merchant:      merchant,
-      date:          date.isNotEmpty ? date : _todayIso(),
-      note:          note,
-      amount:        amount,
-      paymentMethod: paymentMethod,
-    ));
+    _expenses.insert(
+      0,
+      Expense(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        category: category,
+        merchant: merchant,
+        date: date.isNotEmpty ? date : _todayIso(),
+        note: note,
+        amount: amount,
+        paymentMethod: paymentMethod,
+      ),
+    );
     notifyListeners();
   }
 

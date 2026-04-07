@@ -37,29 +37,27 @@ class InsightItem {
 
   static Color _colorFor(String label) {
     switch (label.toLowerCase()) {
-      case 'food':
-        return const Color(0xFFFF6B6B);
-      case 'travel':
-        return const Color(0xFF4FC3F7);
-      case 'supplies':
-        return const Color(0xFF81C784);
-      case 'bills':
-        return const Color(0xFFFFB347);
-      default:
-        return const Color(0xFFCE93D8);
+      case 'food':          return const Color(0xFFFF6B6B);
+      case 'travel':        return const Color(0xFF4FC3F7);
+      case 'supplies':      return const Color(0xFFA5D6A7);
+      case 'bills':         return const Color(0xFFFFB347);
+      case 'medical':       return const Color(0xFF81C784);
+      case 'entertainment': return const Color(0xFFCE93D8);
+      default:              return const Color(0xFFCE93D8);
     }
   }
 
   static List<InsightItem> mockList() => [
     InsightItem(label: 'Food',     amount: 12400, color: const Color(0xFFFF6B6B)),
     InsightItem(label: 'Travel',   amount: 8200,  color: const Color(0xFF4FC3F7)),
-    InsightItem(label: 'Supplies', amount: 6800,  color: const Color(0xFF81C784)),
+    InsightItem(label: 'Supplies', amount: 6800,  color: const Color(0xFFA5D6A7)),
     InsightItem(label: 'Bills',    amount: 5000,  color: const Color(0xFFFFB347)),
   ];
 }
 
 class ExpenseItem {
-  final String   category;
+  final String   category;   // real category: Food, Travel, Bills, Medical...
+  final String   merchant;   // vendor/store name: trifecta, ola, udipi...
   final String   date;
   final String   subtitle;
   final int      amount;
@@ -69,6 +67,7 @@ class ExpenseItem {
 
   ExpenseItem({
     required this.category,
+    required this.merchant,
     required this.date,
     required this.subtitle,
     required this.amount,
@@ -78,43 +77,54 @@ class ExpenseItem {
   });
 
   factory ExpenseItem.fromJson(Map<String, dynamic> j) {
-    final cat = (j['category'] ?? j['merchant'] ?? 'Other').toString();
+    // categoryName / category = real type (Food, Travel, Bills...)
+    // merchant / name / description = store name (trifecta, ola, udipi...)
+    final cat   = (j['categoryName'] ?? j['category'] ?? 'Other').toString();
+    final merch = (j['merchant'] ?? j['name'] ?? j['description'] ?? '').toString();
     return ExpenseItem(
       category:  cat,
-      date:      j['date']        ?? j['expenseDate'] ?? '',
-      subtitle:  j['description'] ?? j['subtitle']    ?? '',
+      merchant:  merch,
+      date:      (j['expenseDate'] ?? j['date'] ?? '').toString(),
+      subtitle:  (j['description'] ?? j['subtitle'] ?? '').toString(),
       amount:    (j['amount'] ?? 0).toInt(),
       icon:      _iconFor(cat),
       color:     _colorFor(cat),
-      highlight: j['highlight']   ?? false,
+      highlight: j['highlight'] ?? false,
     );
   }
 
+  // Icon driven by real category — not merchant name
   static IconData _iconFor(String cat) {
-    final c = cat.toLowerCase();
-    if (c.contains('food') || c.contains('swiggy') || c.contains('zomato')) {
-      return Icons.fastfood;
+    switch (cat.toLowerCase()) {
+      case 'food':          return Icons.fastfood;
+      case 'travel':        return Icons.directions_car;
+      case 'bills':         return Icons.receipt_long;
+      case 'medical':       return Icons.local_pharmacy;
+      case 'entertainment': return Icons.movie;
+      case 'supplies':      return Icons.shopping_bag;
+      case 'education':     return Icons.school;
+      default:              return Icons.shopping_bag;
     }
-    if (c.contains('travel') || c.contains('uber') || c.contains('ola')) {
-      return Icons.directions_car;
-    }
-    if (c.contains('bill') || c.contains('electric')) {
-      return Icons.receipt_long;
-    }
-    return Icons.shopping_bag;
   }
 
+  // Color driven by real category — not merchant name
   static Color _colorFor(String cat) {
-    final c = cat.toLowerCase();
-    if (c.contains('food')) return const Color(0xFFFF6B6B);
-    if (c.contains('travel')) return const Color(0xFF4FC3F7);
-    if (c.contains('bill')) return const Color(0xFFFFB347);
-    return const Color(0xFF81C784);
+    switch (cat.toLowerCase()) {
+      case 'food':          return const Color(0xFFFF6B6B);
+      case 'travel':        return const Color(0xFF4FC3F7);
+      case 'bills':         return const Color(0xFFFFB347);
+      case 'medical':       return const Color(0xFF81C784);
+      case 'entertainment': return const Color(0xFFCE93D8);
+      case 'supplies':      return const Color(0xFFA5D6A7);
+      case 'education':     return const Color(0xFF4DB6AC);
+      default:              return const Color(0xFFA5D6A7);
+    }
   }
 
   static List<ExpenseItem> mockList() => [
     ExpenseItem(
-      category:  'Swiggy',
+      category:  'Food',
+      merchant:  'Swiggy',
       date:      'Today',
       subtitle:  'Food delivery',
       amount:    450,
@@ -123,7 +133,8 @@ class ExpenseItem {
       highlight: true,
     ),
     ExpenseItem(
-      category:  'Uber',
+      category:  'Travel',
+      merchant:  'Uber',
       date:      'Yesterday',
       subtitle:  'Cab ride',
       amount:    220,
@@ -190,7 +201,6 @@ class DashboardService {
   static Future<DashboardData> fetchAll() async {
     final headers = await ApiConfig.authHeaders;
 
-    // FIX: each call is independent — one failure won't kill the others
     final results = await Future.wait([
       _getSafe(ApiConfig.budgetSummary,  headers),
       _getSafe(ApiConfig.insights,       headers),
@@ -230,6 +240,10 @@ class DashboardService {
           : (raw as Map?)?['data'] as List? ?? [];
       recent = list.map((e) => ExpenseItem.fromJson(e as Map<String, dynamic>)).toList();
       debugPrint('Recent expenses loaded: ${recent.length} items');
+      // Debug: print each expense so we can see category vs merchant
+      for (final r in recent) {
+        debugPrint('  expense → category: "${r.category}"  merchant: "${r.merchant}"');
+      }
     } catch (e) {
       debugPrint('Recent expenses parse error: $e');
       recent = ExpenseItem.mockList();
@@ -252,7 +266,6 @@ class DashboardService {
     );
   }
 
-  // Returns null instead of throwing — so one bad endpoint won't crash fetchAll
   static Future<dynamic> _getSafe(String url, Map<String, String> headers) async {
     try {
       final response = await http

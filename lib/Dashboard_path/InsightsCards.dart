@@ -26,7 +26,12 @@ class SpendingInsightsScreen extends StatelessWidget {
         ),
         title: const Text(
           'Spending insights',
-          style: TextStyle(color: Color(0xFF5A5A5A), fontWeight: FontWeight.w600, fontSize: 20, fontFamily: 'Poppins'),
+          style: TextStyle(
+            color: Color(0xFF5A5A5A),
+            fontWeight: FontWeight.w600,
+            fontSize: 20,
+            fontFamily: 'Poppins',
+          ),
         ),
         centerTitle: true,
       ),
@@ -61,8 +66,10 @@ class _TopCardState extends State<_TopCard> {
 
   List<Map<String, dynamic>> get _chartData => widget.provider.last10DaysChart;
 
-  List<String>  get _days    => _chartData.map((e) => e['label'].toString()).toList();
-  List<double>  get _amounts => _chartData.map((e) => (e['value'] as num).toDouble()).toList();
+  List<String> get _days =>
+      _chartData.map((e) => e['label'].toString()).toList();
+  List<double> get _amounts =>
+      _chartData.map((e) => (e['value'] as num).toDouble()).toList();
 
   List<double> get _heights {
     final maxVal = _amounts.isEmpty ? 1.0 : _amounts.reduce(math.max);
@@ -75,20 +82,37 @@ class _TopCardState extends State<_TopCard> {
     return '${d.day} ${_monthShort(d.month)} (${weekdays[d.weekday]})';
   }).toList();
 
-  static String _monthShort(int m) => const ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m];
+  static String _monthShort(int m) => const [
+    '',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ][m];
 
   @override
   Widget build(BuildContext context) {
-    final days    = _days;
+    final days = _days;
     final amounts = _amounts;
     final heights = _heights;
-    final dates   = _dates;
-    final idx     = _activeIndex.clamp(0, amounts.isEmpty ? 0 : amounts.length - 1);
-    final selAmt  = amounts.isEmpty ? 0.0 : amounts[idx];
+    final dates = _dates;
+    final idx = _activeIndex.clamp(0, amounts.isEmpty ? 0 : amounts.length - 1);
+    final selAmt = amounts.isEmpty ? 0.0 : amounts[idx];
     final selDate = dates.isEmpty ? '' : dates[idx];
 
     return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(13)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(13),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -102,14 +126,17 @@ class _TopCardState extends State<_TopCard> {
                   padding: const EdgeInsets.fromLTRB(10, 12, 10, 12),
                   decoration: const BoxDecoration(
                     color: Color(0xFFEEF1F5),
-                    borderRadius: BorderRadius.only(topLeft: Radius.circular(13)),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(13),
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Center(
                         child: SizedBox(
-                          width: 150, height: 85,
+                          width: 150,
+                          height: 85,
                           child: CustomPaint(painter: _GaugePainter()),
                         ),
                       ),
@@ -117,7 +144,12 @@ class _TopCardState extends State<_TopCard> {
                       Center(
                         child: Text(
                           selAmt > 0 ? '₹ ${selAmt.toStringAsFixed(0)}' : '₹ 0',
-                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16, fontFamily: 'Poppins', color: Color(0xFF1E1E1E)),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                            fontFamily: 'Poppins',
+                            color: Color(0xFF1E1E1E),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -125,7 +157,11 @@ class _TopCardState extends State<_TopCard> {
                         child: Text(
                           selAmt > 0 ? 'spent on $selDate' : 'no expenses',
                           textAlign: TextAlign.center,
-                          style: const TextStyle(color: Color(0xFF8E8E8E), fontSize: 11, fontFamily: 'Poppins'),
+                          style: const TextStyle(
+                            color: Color(0xFF8E8E8E),
+                            fontSize: 11,
+                            fontFamily: 'Poppins',
+                          ),
                         ),
                       ),
                     ],
@@ -138,22 +174,43 @@ class _TopCardState extends State<_TopCard> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Daily spending', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, fontFamily: 'Poppins', color: Color(0xFF5A5A5A))),
+                        const Text(
+                          'Daily spending',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            fontFamily: 'Poppins',
+                            color: Color(0xFF5A5A5A),
+                          ),
+                        ),
                         const SizedBox(height: 4),
                         Text(
                           'Avg ₹ ${widget.provider.dailyAverage.toStringAsFixed(0)}/day this month',
-                          style: const TextStyle(color: Color(0xFF8E8E8E), fontSize: 11, fontFamily: 'Poppins'),
+                          style: const TextStyle(
+                            color: Color(0xFF8E8E8E),
+                            fontSize: 11,
+                            fontFamily: 'Poppins',
+                          ),
                         ),
                         const SizedBox(height: 10),
                         Expanded(
                           child: amounts.isEmpty
-                              ? const Center(child: Text('No data', style: TextStyle(color: Colors.grey, fontSize: 12)))
+                              ? const Center(
+                                  child: Text(
+                                    'No data',
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                )
                               : _MiniBarChart(
-                                  days:        days,
-                                  heights:     heights,
-                                  amounts:     amounts,
+                                  days: days,
+                                  heights: heights,
+                                  amounts: amounts,
                                   activeIndex: idx,
-                                  onTap:       (i) => setState(() => _activeIndex = i),
+                                  onTap: (i) =>
+                                      setState(() => _activeIndex = i),
                                 ),
                         ),
                       ],
@@ -172,15 +229,18 @@ class _TopCardState extends State<_TopCard> {
 // ── Mini Bar Chart ────────────────────────────────────────────────────────────
 
 class _MiniBarChart extends StatelessWidget {
-  final List<String>  days;
-  final List<double>  heights;
-  final List<double>  amounts;
-  final int           activeIndex;
+  final List<String> days;
+  final List<double> heights;
+  final List<double> amounts;
+  final int activeIndex;
   final ValueChanged<int> onTap;
 
   const _MiniBarChart({
-    required this.days, required this.heights, required this.amounts,
-    required this.activeIndex, required this.onTap,
+    required this.days,
+    required this.heights,
+    required this.amounts,
+    required this.activeIndex,
+    required this.onTap,
   });
 
   @override
@@ -190,7 +250,7 @@ class _MiniBarChart extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: List.generate(days.length, (i) {
         final isActive = i == activeIndex;
-        final barH     = math.max(heights[i] * 55.0, amounts[i] > 0 ? 6.0 : 2.0);
+        final barH = math.max(heights[i] * 55.0, amounts[i] > 0 ? 6.0 : 2.0);
         return GestureDetector(
           onTap: () => onTap(i),
           child: Column(
@@ -201,12 +261,23 @@ class _MiniBarChart extends StatelessWidget {
                 width: 16,
                 height: barH,
                 decoration: BoxDecoration(
-                  color: isActive ? const Color(0xFF4D8BC6) : const Color(0xFFCBD8E9),
+                  color: isActive
+                      ? const Color(0xFF4D8BC6)
+                      : const Color(0xFFCBD8E9),
                   borderRadius: BorderRadius.circular(3),
                 ),
               ),
               const SizedBox(height: 3),
-              Text(days[i], style: TextStyle(fontSize: 8.5, color: isActive ? const Color(0xFF4D8BC6) : const Color(0xFFAAAAAA), fontFamily: 'Poppins')),
+              Text(
+                days[i],
+                style: TextStyle(
+                  fontSize: 8.5,
+                  color: isActive
+                      ? const Color(0xFF4D8BC6)
+                      : const Color(0xFFAAAAAA),
+                  fontFamily: 'Poppins',
+                ),
+              ),
             ],
           ),
         );
@@ -224,16 +295,21 @@ class _BreakdownCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Get today's expenses
-    final today   = DateTime.now();
+    final today = DateTime.now();
     final todayEx = provider.allExpenses.where((e) {
       final d = e.parsedDate;
-      return d != null && d.year == today.year && d.month == today.month && d.day == today.day;
+      return d != null &&
+          d.year == today.year &&
+          d.month == today.month &&
+          d.day == today.day;
     }).toList();
 
     // Category totals for today
     final catMap = <String, double>{};
-    for (final e in todayEx) catMap[e.category] = (catMap[e.category] ?? 0) + e.amount;
-    final sorted = catMap.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    for (final e in todayEx)
+      catMap[e.category] = (catMap[e.category] ?? 0) + e.amount;
+    final sorted = catMap.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
 
     // Average daily spend for comparison
     final avgDay = provider.dailyAverage;
@@ -244,33 +320,60 @@ class _BreakdownCard extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(13)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(13),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             dateLabel,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, fontFamily: 'Poppins', color: Color(0xFF5A5A5A)),
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              fontFamily: 'Poppins',
+              color: Color(0xFF5A5A5A),
+            ),
           ),
           const SizedBox(height: 16),
 
           if (sorted.isEmpty)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 12),
-              child: Center(child: Text('No expenses today', style: TextStyle(color: Colors.grey, fontSize: 13))),
+              child: Center(
+                child: Text(
+                  'No expenses today',
+                  style: TextStyle(color: Colors.grey, fontSize: 13),
+                ),
+              ),
             )
           else ...[
             // Category grid
             ...List.generate((sorted.length / 2).ceil(), (row) {
-              final left  = sorted[row * 2];
-              final right = row * 2 + 1 < sorted.length ? sorted[row * 2 + 1] : null;
+              final left = sorted[row * 2];
+              final right = row * 2 + 1 < sorted.length
+                  ? sorted[row * 2 + 1]
+                  : null;
               return Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: Row(
                   children: [
-                    Expanded(child: _CatTile(label: left.key, amount: '₹ ${left.value.toStringAsFixed(0)}')),
+                    Expanded(
+                      child: _CatTile(
+                        label: left.key,
+                        amount: '₹ ${left.value.toStringAsFixed(0)}',
+                      ),
+                    ),
                     const SizedBox(width: 12),
-                    Expanded(child: right != null ? _CatTile(label: right.key, amount: '₹ ${right.value.toStringAsFixed(0)}') : const SizedBox.shrink()),
+                    Expanded(
+                      child: right != null
+                          ? _CatTile(
+                              label: right.key,
+                              amount: '₹ ${right.value.toStringAsFixed(0)}',
+                            )
+                          : const SizedBox.shrink(),
+                    ),
                   ],
                 ),
               );
@@ -281,23 +384,52 @@ class _BreakdownCard extends StatelessWidget {
           const Divider(height: 1, thickness: 0.8, color: Color(0xFFDDDDDD)),
           const SizedBox(height: 12),
 
-          const Text('Compared to your average day', style: TextStyle(color: Color(0xFF8E8E8E), fontSize: 12, fontFamily: 'Poppins', fontWeight: FontWeight.w400)),
+          const Text(
+            'Compared to your average day',
+            style: TextStyle(
+              color: Color(0xFF8E8E8E),
+              fontSize: 12,
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.w400,
+            ),
+          ),
           const SizedBox(height: 8),
 
           if (avgDay > 0 && todayTotal > 0) ...[
-            _CmpRow(amount: '₹ ${(todayTotal - avgDay).abs().toStringAsFixed(0)}', label: todayTotal > avgDay ? 'more than avg day' : 'less than avg day'),
+            _CmpRow(
+              amount: '₹ ${(todayTotal - avgDay).abs().toStringAsFixed(0)}',
+              label: todayTotal > avgDay
+                  ? 'more than avg day'
+                  : 'less than avg day',
+            ),
           ] else
-            const Text('  Not enough data yet', style: TextStyle(color: Color(0xFF8E8E8E), fontSize: 12)),
+            const Text(
+              '  Not enough data yet',
+              style: TextStyle(color: Color(0xFF8E8E8E), fontSize: 12),
+            ),
 
           if (biggestCat != null) ...[
             const SizedBox(height: 16),
             const Divider(height: 1, thickness: 0.8, color: Color(0xFFDDDDDD)),
             const SizedBox(height: 12),
-            Text('Biggest contributor: ${biggestCat.key}', style: const TextStyle(color: Color(0xFF8E8E8E), fontSize: 12, fontFamily: 'Poppins', fontWeight: FontWeight.w400)),
+            Text(
+              'Biggest contributor: ${biggestCat.key}',
+              style: const TextStyle(
+                color: Color(0xFF8E8E8E),
+                fontSize: 12,
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
             const SizedBox(height: 3),
             Text(
               '${biggestCat.key} is ${((biggestCat.value / todayTotal) * 100).toStringAsFixed(0)}% of today\'s spend',
-              style: const TextStyle(color: Color(0xFF8E8E8E), fontSize: 12, fontFamily: 'Poppins', fontWeight: FontWeight.w400),
+              style: const TextStyle(
+                color: Color(0xFF8E8E8E),
+                fontSize: 12,
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w400,
+              ),
             ),
           ],
         ],
@@ -305,7 +437,21 @@ class _BreakdownCard extends StatelessWidget {
     );
   }
 
-  static String _monthName(int m) => const ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m];
+  static String _monthName(int m) => const [
+    '',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ][m];
 }
 
 // ── Category Tile ─────────────────────────────────────────────────────────────
@@ -324,7 +470,12 @@ class _CatTile extends StatelessWidget {
         Expanded(
           child: Text(
             '$label  $amount',
-            style: const TextStyle(color: Color(0xFF5F5F5F), fontSize: 12, fontFamily: 'Poppins', fontWeight: FontWeight.w500),
+            style: const TextStyle(
+              color: Color(0xFF5F5F5F),
+              fontSize: 12,
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.w500,
+            ),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -341,15 +492,27 @@ class _IconBox extends StatelessWidget {
   Widget build(BuildContext context) {
     final data = _data();
     return Container(
-      width: 36, height: 30,
-      decoration: BoxDecoration(color: data['bg'], borderRadius: BorderRadius.circular(4), border: Border.all(color: data['border'] as Color, width: 0.8)),
-      child: Center(child: Icon(data['icon'] as IconData, size: 15, color: data['border'] as Color)),
+      width: 36,
+      height: 30,
+      decoration: BoxDecoration(
+        color: data['bg'],
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: data['border'] as Color, width: 0.8),
+      ),
+      child: Center(
+        child: Icon(
+          data['icon'] as IconData,
+          size: 15,
+          color: data['border'] as Color,
+        ),
+      ),
     );
   }
 
   Map<String, dynamic> _data() {
     switch (category.toLowerCase()) {
       case 'food':
+<<<<<<< HEAD
         return {'bg': const Color(0x25FF6B6B), 'border': const Color(0xFFFF6B6B), 'icon': Icons.fastfood};
       case 'travel':
         return {'bg': const Color(0x354FC3F7), 'border': const Color(0xFF4FC3F7), 'icon': Icons.directions_car};
@@ -373,6 +536,79 @@ class _IconBox extends StatelessWidget {
         return {'bg': const Color(0x2590CAF9), 'border': const Color(0xFF90CAF9), 'icon': Icons.home_repair_service};
       default:
         return {'bg': const Color(0x2590A4AE), 'border': const Color(0xFF90A4AE), 'icon': Icons.category};
+=======
+        return {
+          'bg': const Color(0x25FF6B6B),
+          'border': const Color(0xFFFF6B6B),
+          'icon': Icons.fastfood,
+        };
+      case 'travel':
+        return {
+          'bg': const Color(0x354FC3F7),
+          'border': const Color(0xFF4FC3F7),
+          'icon': Icons.directions_car,
+        };
+      case 'supplies':
+        return {
+          'bg': const Color(0x25EFA169),
+          'border': const Color(0xFFEFA169),
+          'icon': Icons.shopping_cart,
+        };
+      case 'bills':
+        return {
+          'bg': const Color(0x30FFB347),
+          'border': const Color(0xFFFFB347),
+          'icon': Icons.receipt_long,
+        };
+      case 'entertainment':
+        return {
+          'bg': const Color(0x25CE93D8),
+          'border': const Color(0xFFCE93D8),
+          'icon': Icons.movie,
+        };
+      case 'medical':
+        return {
+          'bg': const Color(0x2581C784),
+          'border': const Color(0xFF81C784),
+          'icon': Icons.local_pharmacy,
+        };
+      case 'education':
+        return {
+          'bg': const Color(0x254DB6AC),
+          'border': const Color(0xFF4DB6AC),
+          'icon': Icons.school,
+        };
+      case 'rent':
+        return {
+          'bg': const Color(0x30FFD54F),
+          'border': const Color(0xFFFFD54F),
+          'icon': Icons.home,
+        };
+      case 'petrol':
+        return {
+          'bg': const Color(0x25FF8A65),
+          'border': const Color(0xFFFF8A65),
+          'icon': Icons.local_gas_station,
+        };
+      case 'electricity':
+        return {
+          'bg': const Color(0x30FDD835),
+          'border': const Color(0xFFFDD835),
+          'icon': Icons.electric_bolt,
+        };
+      case 'home services':
+        return {
+          'bg': const Color(0x2590CAF9),
+          'border': const Color(0xFF90CAF9),
+          'icon': Icons.home_repair_service,
+        };
+      default:
+        return {
+          'bg': const Color(0x2590A4AE),
+          'border': const Color(0xFF90A4AE),
+          'icon': Icons.category,
+        };
+>>>>>>> 7db71c92c0dfce72f1332176fa60e9d99cfb51b0
     }
   }
 }
@@ -388,8 +624,24 @@ class _CmpRow extends StatelessWidget {
     return RichText(
       text: TextSpan(
         children: [
-          TextSpan(text: '  $amount ', style: const TextStyle(color: Color(0xFF5F5F5F), fontSize: 13, fontFamily: 'Poppins', fontWeight: FontWeight.w500)),
-          TextSpan(text: label,        style: const TextStyle(color: Color(0xFF8E8E8E), fontSize: 13, fontFamily: 'Poppins', fontWeight: FontWeight.w400)),
+          TextSpan(
+            text: '  $amount ',
+            style: const TextStyle(
+              color: Color(0xFF5F5F5F),
+              fontSize: 13,
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          TextSpan(
+            text: label,
+            style: const TextStyle(
+              color: Color(0xFF8E8E8E),
+              fontSize: 13,
+              fontFamily: 'Poppins',
+              fontWeight: FontWeight.w400,
+            ),
+          ),
         ],
       ),
     );
@@ -408,10 +660,18 @@ class _WeeklySummary extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(13)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(13),
+      ),
       child: Text(
         'This week:  ₹ ${weekTotal.toStringAsFixed(0)}  Spent',
-        style: const TextStyle(color: Color(0xFF5A5A5A), fontSize: 14, fontFamily: 'Poppins', fontWeight: FontWeight.w600),
+        style: const TextStyle(
+          color: Color(0xFF5A5A5A),
+          fontSize: 14,
+          fontFamily: 'Poppins',
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -423,7 +683,7 @@ class _GaugePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final cx = size.width / 2, cy = size.height * 0.88;
-    final r  = size.width * 0.40;
+    final r = size.width * 0.40;
 
     const startAngle = math.pi;
     const sweepAngle = math.pi;
@@ -431,15 +691,27 @@ class _GaugePainter extends CustomPainter {
     // Track
     canvas.drawArc(
       Rect.fromCircle(center: Offset(cx, cy), radius: r),
-      startAngle, sweepAngle, false,
-      Paint()..color = const Color(0xFFDDE3EA)..strokeWidth = 10..style = PaintingStyle.stroke..strokeCap = StrokeCap.round,
+      startAngle,
+      sweepAngle,
+      false,
+      Paint()
+        ..color = const Color(0xFFDDE3EA)
+        ..strokeWidth = 10
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round,
     );
 
     // Fill (40%)
     canvas.drawArc(
       Rect.fromCircle(center: Offset(cx, cy), radius: r),
-      startAngle, sweepAngle * 0.4, false,
-      Paint()..color = const Color(0xFF4D8BC6)..strokeWidth = 10..style = PaintingStyle.stroke..strokeCap = StrokeCap.round,
+      startAngle,
+      sweepAngle * 0.4,
+      false,
+      Paint()
+        ..color = const Color(0xFF4D8BC6)
+        ..strokeWidth = 10
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round,
     );
   }
 

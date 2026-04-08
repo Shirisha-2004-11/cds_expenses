@@ -259,7 +259,9 @@ class _AnalyticsChartPainter extends CustomPainter {
     final path = Path();
     if (pts.isEmpty) return path;
     path.moveTo(pts.first.dx, h - _padB);
-    for (final p in pts) path.lineTo(p.dx, p.dy);
+    for (final p in pts) {
+      path.lineTo(p.dx, p.dy);
+    }
     path.lineTo(pts.last.dx, h - _padB);
     path.close();
     return path;
@@ -269,7 +271,9 @@ class _AnalyticsChartPainter extends CustomPainter {
     final path = Path();
     if (pts.isEmpty) return path;
     path.moveTo(pts.first.dx, pts.first.dy);
-    for (int i = 1; i < pts.length; i++) path.lineTo(pts[i].dx, pts[i].dy);
+    for (int i = 1; i < pts.length; i++) {
+      path.lineTo(pts[i].dx, pts[i].dy);
+    }
     return path;
   }
 
@@ -310,7 +314,9 @@ class _AnalyticsChartPainter extends CustomPainter {
     canvas.drawPath(_linePath(pPts), Paint()..color = const Color(0xFF8EC4A8)..strokeWidth = 2.0..style = PaintingStyle.stroke..strokeCap = StrokeCap.round..strokeJoin = StrokeJoin.round);
     canvas.drawPath(_linePath(cPts), Paint()..color = const Color(0xFF2A7A50)..strokeWidth = 2.5..style = PaintingStyle.stroke..strokeCap = StrokeCap.round..strokeJoin = StrokeJoin.round);
 
-    for (int i = 0; i < pPts.length; i++) _drawDot(canvas, pPts[i], 3.5, Colors.white, const Color(0xFF8EC4A8), 1.6);
+    for (int i = 0; i < pPts.length; i++) {
+      _drawDot(canvas, pPts[i], 3.5, Colors.white, const Color(0xFF8EC4A8), 1.6);
+    }
     for (int i = 0; i < cPts.length; i++) {
       final up = currAmounts[i] >= prevAmounts[i];
       _drawDot(canvas, cPts[i], 4.5, Colors.white, up ? const Color(0xFF2A7A50) : const Color(0xFFC0392B), 2.0);

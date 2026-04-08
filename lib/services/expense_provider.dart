@@ -167,7 +167,7 @@ class ExpenseProvider extends ChangeNotifier {
       final day = today.subtract(Duration(days: 9 - i));
       final key = day.day;
       final val = dailySpendingMap[key] ?? 0.0;
-      final lbl = '${key}';
+      final lbl = '$key';
       return {'label': lbl, 'value': val, 'date': day};
     });
   }
@@ -302,7 +302,7 @@ class ExpenseProvider extends ChangeNotifier {
             (e) => Expense(
               id: UniqueKey().toString(),
               category: e.category,
-              merchant: e.category,
+              merchant: e.merchant,
               date: _todayIso(),
               note: e.subtitle,
               amount: e.amount.toDouble(),

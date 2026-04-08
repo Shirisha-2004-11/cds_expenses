@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../constants/api_constants.dart';
 import '../models/auth_model.dart';
+import 'package:flutter/foundation.dart';
 
 class AuthService {
   // ─── Common headers ───────────────────────────────────────
@@ -27,7 +28,7 @@ class AuthService {
           .timeout(const Duration(seconds: 30));
 
       final data = jsonDecode(response.body);
-      print(" LOGIN RESPONSE: ${response.body}");
+      debugPrint(" LOGIN RESPONSE: ${response.body}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return AuthResponse.fromJson(data);

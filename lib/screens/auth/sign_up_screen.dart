@@ -23,47 +23,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  final _fullNameFocusNode = FocusNode();
-  final _emailFocusNode = FocusNode();
-  final _passwordFocusNode = FocusNode();
-  final _confirmPasswordFocusNode = FocusNode();
-
   final _authService = AuthService();
   bool _isLoading = false;
-
-  bool _fullNameTouched = false;
-  bool _emailTouched = false;
-  bool _passwordTouched = false;
-  bool _confirmPasswordTouched = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _fullNameFocusNode.addListener(() {
-      if (!_fullNameFocusNode.hasFocus && _fullNameController.text.isNotEmpty) {
-        setState(() => _fullNameTouched = true);
-        _formKey.currentState?.validate();
-      }
-    });
-    _emailFocusNode.addListener(() {
-      if (!_emailFocusNode.hasFocus && _emailController.text.isNotEmpty) {
-        setState(() => _emailTouched = true);
-        _formKey.currentState?.validate();
-      }
-    });
-    _passwordFocusNode.addListener(() {
-      if (!_passwordFocusNode.hasFocus && _passwordController.text.isNotEmpty) {
-        setState(() => _passwordTouched = true);
-        _formKey.currentState?.validate();
-      }
-    });
-    _confirmPasswordFocusNode.addListener(() {
-      if (!_confirmPasswordFocusNode.hasFocus && _confirmPasswordController.text.isNotEmpty) {
-        setState(() => _confirmPasswordTouched = true);
-        _formKey.currentState?.validate();
-      }
-    });
-  }
 
   @override
   void dispose() {
@@ -71,20 +32,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
-    _fullNameFocusNode.dispose();
-    _emailFocusNode.dispose();
-    _passwordFocusNode.dispose();
-    _confirmPasswordFocusNode.dispose();
     super.dispose();
   }
 
   Future<void> _handleSignUp() async {
-    setState(() {
-      _fullNameTouched = true;
-      _emailTouched = true;
-      _passwordTouched = true;
-      _confirmPasswordTouched = true;
-    });
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
@@ -161,12 +112,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           label: AppStrings.fullNameLabel,
                           hint: AppStrings.fullNameHint,
                           controller: _fullNameController,
-                          // focusNode: _fullNameFocusNode,
                           keyboardType: TextInputType.name,
                           prefixIcon: const Icon(Icons.person_outline, color: AppColors.textMedium, size: 20),
-                          validator: _fullNameTouched
-                              ? (v) => (v == null || v.isEmpty) ? AppStrings.fieldRequired : null
-                              : null,
+                          onChanged: (_) => _formKey.currentState?.validate(),
+                          validator: (v) => (v == null || v.isEmpty) ? AppStrings.fieldRequired : null,
                         ),
 
                         const SizedBox(height: 20),
@@ -176,18 +125,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           label: AppStrings.emailLabel,
                           hint: AppStrings.emailHint,
                           controller: _emailController,
-                          // focusNode: _emailFocusNode,
                           keyboardType: TextInputType.emailAddress,
                           prefixIcon: const Icon(Icons.email_outlined, color: AppColors.textMedium, size: 20),
-                          validator: _emailTouched
-                              ? (v) {
-                                  if (v == null || v.isEmpty) return AppStrings.fieldRequired;
-                                  if (!RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,}$').hasMatch(v)) {
-                                    return AppStrings.invalidEmail;
-                                  }
-                                  return null;
-                                }
-                              : null,
+                          onChanged: (_) => _formKey.currentState?.validate(),
+                          validator: (v) {
+                            if (v == null || v.isEmpty) return AppStrings.fieldRequired;
+                            if (!RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,}$').hasMatch(v)) {
+                              return AppStrings.invalidEmail;
+                            }
+                            return null;
+                          },
                         ),
 
                         const SizedBox(height: 20),
@@ -197,16 +144,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           label: AppStrings.passwordLabel,
                           hint: AppStrings.passwordHint,
                           controller: _passwordController,
-                          // focusNode: _passwordFocusNode,
                           isPassword: true,
                           prefixIcon: const Icon(Icons.lock_outline, color: AppColors.textMedium, size: 20),
-                          validator: _passwordTouched
-                              ? (v) {
-                                  if (v == null || v.isEmpty) return AppStrings.fieldRequired;
-                                  if (v.length < 8) return AppStrings.passwordTooShort;
-                                  return null;
-                                }
-                              : null,
+                          onChanged: (_) => _formKey.currentState?.validate(),
+                          validator: (v) {
+                            if (v == null || v.isEmpty) return AppStrings.fieldRequired;
+                            if (v.length < 8) return AppStrings.passwordTooShort;
+                            return null;
+                          },
                         ),
 
                         const SizedBox(height: 20),
@@ -216,18 +161,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           label: AppStrings.confirmPasswordLabel,
                           hint: AppStrings.confirmPasswordHint,
                           controller: _confirmPasswordController,
-                          // focusNode: _confirmPasswordFocusNode,
                           isPassword: true,
                           prefixIcon: const Icon(Icons.lock_outline, color: AppColors.textMedium, size: 20),
                           textInputAction: TextInputAction.done,
                           onEditingComplete: _handleSignUp,
-                          validator: _confirmPasswordTouched
-                              ? (v) {
-                                  if (v == null || v.isEmpty) return AppStrings.fieldRequired;
-                                  if (v != _passwordController.text) return AppStrings.passwordsDoNotMatch;
-                                  return null;
-                                }
-                              : null,
+                          onChanged: (_) => _formKey.currentState?.validate(),
+                          validator: (v) {
+                            if (v == null || v.isEmpty) return AppStrings.fieldRequired;
+                            if (v != _passwordController.text) return AppStrings.passwordsDoNotMatch;
+                            return null;
+                          },
                         ),
 
                         const SizedBox(height: 32),

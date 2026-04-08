@@ -54,7 +54,12 @@ class _SignInScreenState extends State<SignInScreen> {
       //           checks AuthState.token before SharedPreferences, so the token
       //           is guaranteed to be available the moment the Dashboard loads,
       //           with no async race condition.
-      AuthState.setToken(response.token, userName: response.user.fullName);
+      AuthState.setToken(
+        response.token,
+        userName:  response.user.fullName,
+        userEmail: response.user.email,
+        userId:    response.user.id,
+      );
 
       // ✅ FIX 2: Persist to SharedPreferences for cold-start / page-refresh survival.
       //           (main() reads this back into AuthState before runApp on next launch)
@@ -62,6 +67,16 @@ class _SignInScreenState extends State<SignInScreen> {
       await prefs.setString('auth_token', response.token);
       await prefs.setString('user_email', response.user.email);
       await prefs.setString('user_name',  response.user.fullName);
+      await prefs.setString('user_id',    response.user.id);
+
+      // ── Console log SharedPreferences saved values ──
+      debugPrint('╔══════════════════════════════════════════');
+      debugPrint('║  SHARED PREFERENCES SAVED');
+      debugPrint('╠══════════════════════════════════════════');
+      debugPrint('║  user_name  : ${response.user.fullName}');
+      debugPrint('║  user_email : ${response.user.email}');
+      debugPrint('║  auth_token : ${response.token}');
+      debugPrint('╚══════════════════════════════════════════');
 
       if (mounted) {
         Navigator.pushReplacement(

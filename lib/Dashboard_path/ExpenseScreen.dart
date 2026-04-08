@@ -90,7 +90,7 @@ class _AddExpensePageState extends State<AddExpensePage>
     with TickerProviderStateMixin {
   // 🔑 Gemini API Keys
   final List<String> _apiKeys = [
-    'AIzaSyD81_WGLPcDkPRlCZaOmRAsGqGMleEwkto', // ← REPLACE with your own Gemini API keys
+    'AIzaSyChbgqWxHrtwmM8tqPIcOZHBu4-78U9tsw',     // ← REPLACE with your own Gemini API keys
   ];
 
   int _currentKeyIndex = 0;
@@ -522,12 +522,12 @@ class _AddExpensePageState extends State<AddExpensePage>
   // ─── Gemini API Scanning ──────────────────────────────────────────────────
 
   Future<void> _startScan() async {
-    print('==================================');
-    print('_startScan called');
-    print('  scanCount    : $_scanCount');
-    print('  scanLimit    : $_scanLimit');
-    print('  activeKey    : Key ${_currentKeyIndex + 1}');
-    print('==================================');
+    debugPrint('==================================');
+    debugPrint('_startScan called');
+    debugPrint('  scanCount    : $_scanCount');
+    debugPrint('  scanLimit    : $_scanLimit');
+    debugPrint('  activeKey    : Key ${_currentKeyIndex + 1}');
+    debugPrint('==================================');
 
     if (_scanState == ScanState.scanning) return;
 

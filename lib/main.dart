@@ -19,8 +19,25 @@ void main() async {
   final prefs      = await SharedPreferences.getInstance();
   final savedToken = prefs.getString('auth_token');
   final savedName  = prefs.getString('user_name');
+  final savedEmail = prefs.getString('user_email');
+  final savedId    = prefs.getString('user_id');
+
   if (savedToken != null && savedToken.isNotEmpty) {
-    AuthState.setToken(savedToken, userName: savedName);
+    AuthState.setToken(
+      savedToken,
+      userName:  savedName,
+      userEmail: savedEmail,
+      userId:    savedId,
+    );
+
+    // ── Console log restored credentials on app start ──
+    debugPrint('╔══════════════════════════════════════════');
+    debugPrint('║  CREDENTIALS RESTORED FROM STORAGE');
+    debugPrint('╠══════════════════════════════════════════');
+    debugPrint('║  user_name  : $savedName');
+    debugPrint('║  user_email : $savedEmail');
+    debugPrint('║  auth_token : $savedToken');
+    debugPrint('╚══════════════════════════════════════════');
   }
 
   runApp(

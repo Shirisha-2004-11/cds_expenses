@@ -306,8 +306,9 @@ class _BreakdownCard extends StatelessWidget {
 
     // Category totals for today
     final catMap = <String, double>{};
-    for (final e in todayEx)
+    for (final e in todayEx) {
       catMap[e.category] = (catMap[e.category] ?? 0) + e.amount;
+    }
     final sorted = catMap.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 

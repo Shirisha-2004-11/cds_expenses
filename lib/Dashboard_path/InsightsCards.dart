@@ -512,7 +512,6 @@ class _IconBox extends StatelessWidget {
   Map<String, dynamic> _data() {
     switch (category.toLowerCase()) {
       case 'food':
-<<<<<<< HEAD
         return {'bg': const Color(0x25FF6B6B), 'border': const Color(0xFFFF6B6B), 'icon': Icons.fastfood};
       case 'travel':
         return {'bg': const Color(0x354FC3F7), 'border': const Color(0xFF4FC3F7), 'icon': Icons.directions_car};
@@ -536,79 +535,6 @@ class _IconBox extends StatelessWidget {
         return {'bg': const Color(0x2590CAF9), 'border': const Color(0xFF90CAF9), 'icon': Icons.home_repair_service};
       default:
         return {'bg': const Color(0x2590A4AE), 'border': const Color(0xFF90A4AE), 'icon': Icons.category};
-=======
-        return {
-          'bg': const Color(0x25FF6B6B),
-          'border': const Color(0xFFFF6B6B),
-          'icon': Icons.fastfood,
-        };
-      case 'travel':
-        return {
-          'bg': const Color(0x354FC3F7),
-          'border': const Color(0xFF4FC3F7),
-          'icon': Icons.directions_car,
-        };
-      case 'supplies':
-        return {
-          'bg': const Color(0x25EFA169),
-          'border': const Color(0xFFEFA169),
-          'icon': Icons.shopping_cart,
-        };
-      case 'bills':
-        return {
-          'bg': const Color(0x30FFB347),
-          'border': const Color(0xFFFFB347),
-          'icon': Icons.receipt_long,
-        };
-      case 'entertainment':
-        return {
-          'bg': const Color(0x25CE93D8),
-          'border': const Color(0xFFCE93D8),
-          'icon': Icons.movie,
-        };
-      case 'medical':
-        return {
-          'bg': const Color(0x2581C784),
-          'border': const Color(0xFF81C784),
-          'icon': Icons.local_pharmacy,
-        };
-      case 'education':
-        return {
-          'bg': const Color(0x254DB6AC),
-          'border': const Color(0xFF4DB6AC),
-          'icon': Icons.school,
-        };
-      case 'rent':
-        return {
-          'bg': const Color(0x30FFD54F),
-          'border': const Color(0xFFFFD54F),
-          'icon': Icons.home,
-        };
-      case 'petrol':
-        return {
-          'bg': const Color(0x25FF8A65),
-          'border': const Color(0xFFFF8A65),
-          'icon': Icons.local_gas_station,
-        };
-      case 'electricity':
-        return {
-          'bg': const Color(0x30FDD835),
-          'border': const Color(0xFFFDD835),
-          'icon': Icons.electric_bolt,
-        };
-      case 'home services':
-        return {
-          'bg': const Color(0x2590CAF9),
-          'border': const Color(0xFF90CAF9),
-          'icon': Icons.home_repair_service,
-        };
-      default:
-        return {
-          'bg': const Color(0x2590A4AE),
-          'border': const Color(0xFF90A4AE),
-          'icon': Icons.category,
-        };
->>>>>>> 7db71c92c0dfce72f1332176fa60e9d99cfb51b0
     }
   }
 }

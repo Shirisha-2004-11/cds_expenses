@@ -49,8 +49,19 @@ class _MonthlyAnalyticsCardState extends State<MonthlyAnalyticsCard> {
 
   int get _safeIdx => _activeIdx.clamp(0, (_amounts.length - 1).clamp(0, 100));
 
-  // Simulated previous month as 85% of current (fallback when no real history)
-  List<double> get _prevAmounts => _amounts.map((a) => a * 0.85).toList();
+  /// Returns the real previous month's amount for a given index.
+  /// If no previous month exists (first entry), returns 0.
+  double _prevAmount(int idx) {
+    if (idx > 0) {
+      return (widget.monthlyTrend[idx - 1]['amount'] as num).toDouble();
+    }
+    return 0.0;
+  }
+
+  /// Builds a list of previous-month amounts aligned to [_amounts].
+  /// Index 0 has no prior month, so it gets 0.0.
+  List<double> get _prevAmounts =>
+      List.generate(_amounts.length, (i) => _prevAmount(i));
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +70,7 @@ class _MonthlyAnalyticsCardState extends State<MonthlyAnalyticsCard> {
 
     final idx       = _safeIdx;
     final c         = amounts[idx];
-    final p         = _prevAmounts[idx];
+    final p         = _prevAmount(idx); // ✅ real previous month amount
     final diffPct   = p > 0 ? ((c - p) / p * 100).round() : 0;
     final isUp      = diffPct >= 0;
     final prevLabel = idx > 0 ? _shortMonths[idx - 1] : _shortMonths[idx];
@@ -116,41 +127,44 @@ class _MonthlyAnalyticsCardState extends State<MonthlyAnalyticsCard> {
                     Text(fmtINR(c), style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w700, color: Color(0xFF1A2E22), letterSpacing: -0.3, fontFeatures: [FontFeature.tabularFigures()])),
                     const SizedBox(height: 2),
                     Text('in ${_shortMonths[idx]}', style: const TextStyle(fontSize: 11.5, color: Color(0xFF8FAA98))),
-                    const SizedBox(height: 5),
-                    Row(
-                      children: [
-                        Text('Vs $prevLabel ${fmtINR(p)}', style: const TextStyle(fontSize: 11.5, color: Color(0xFF8FAA98))),
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: isUp ? const Color(0xFFE4F2EA) : const Color(0xFFFDEAEA),
-                            borderRadius: BorderRadius.circular(8),
+                    if (p > 0) ...[
+                      const SizedBox(height: 5),
+                      Row(
+                        children: [
+                          Text('Vs \$prevLabel \${fmtINR(p)}', style: const TextStyle(fontSize: 11.5, color: Color(0xFF8FAA98))),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: isUp ? const Color(0xFFE4F2EA) : const Color(0xFFFDEAEA),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '\${isUp ? \'+\' : \'\'}$diffPct%',
+                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: isUp ? const Color(0xFF2A7A50) : const Color(0xFFC0392B), fontFeatures: const [FontFeature.tabularFigures()]),
+                            ),
                           ),
-                          child: Text(
-                            '${isUp ? '+' : ''}$diffPct%',
-                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: isUp ? const Color(0xFF2A7A50) : const Color(0xFFC0392B), fontFeatures: const [FontFeature.tabularFigures()]),
-                          ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: isUp ? const Color(0xFFE4F2EA) : const Color(0xFFFFEBEB),
-                    borderRadius: BorderRadius.circular(14),
+                if (p > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: isUp ? const Color(0xFFE4F2EA) : const Color(0xFFFFEBEB),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(isUp ? '↑' : '↓', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: isUp ? const Color(0xFF2A7A50) : const Color(0xFFC0392B))),
+                        const SizedBox(width: 4),
+                        Text('\${diffPct.abs()}%', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: isUp ? const Color(0xFF2A7A50) : const Color(0xFFC0392B), fontFeatures: const [FontFeature.tabularFigures()])),
+                      ],
+                    ),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(isUp ? '↑' : '↓', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: isUp ? const Color(0xFF2A7A50) : const Color(0xFFC0392B))),
-                      const SizedBox(width: 4),
-                      Text('${diffPct.abs()}%', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: isUp ? const Color(0xFF2A7A50) : const Color(0xFFC0392B), fontFeatures: const [FontFeature.tabularFigures()])),
-                    ],
-                  ),
-                ),
               ],
             ),
           ),

@@ -18,23 +18,9 @@ class _RecentExpensesPageState extends State<RecentExpensesPage> {
   String _selectedFilter = 'All';
 
   static const _filters = [
-<<<<<<< HEAD
     'All', 'Food', 'Travel', 'Supplies', 'Bills', 'Entertainment',
     'Medical', 'Education', 'Rent', 'Petrol', 'Electricity', 'Home Services',
-=======
-    'All',
-    'Food',
-    'Travel',
-    'Supplies',
-    'Bills',
-    'Entertainment',
-    'Medical',
-    'Education',
-    'Rent',
-    'Petrol',
-    'Electricity',
-    'Home Services',
->>>>>>> 7db71c92c0dfce72f1332176fa60e9d99cfb51b0
+    
   ];
 
   /// Returns expenses filtered by selected category
@@ -44,7 +30,6 @@ class _RecentExpensesPageState extends State<RecentExpensesPage> {
     return all
         .where((e) => e.category.toLowerCase() == _selectedFilter.toLowerCase())
         .toList();
-<<<<<<< HEAD
   }
 
   /// Groups expenses into an ordered map: category → list of Expense
@@ -73,15 +58,12 @@ class _RecentExpensesPageState extends State<RecentExpensesPage> {
         }),
     );
     return sorted;
-=======
->>>>>>> 7db71c92c0dfce72f1332176fa60e9d99cfb51b0
   }
 
   @override
   Widget build(BuildContext context) {
     final expenses = _filtered;
     final total = expenses.fold(0.0, (s, e) => s + e.amount);
-<<<<<<< HEAD
     final grouped = _grouped;
 
     // Flatten grouped map into a mixed list: headers + expense items
@@ -95,8 +77,6 @@ class _RecentExpensesPageState extends State<RecentExpensesPage> {
         listItems.add(_ExpenseItem(expense: e));
       }
     }
-=======
->>>>>>> 7db71c92c0dfce72f1332176fa60e9d99cfb51b0
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FC),
@@ -113,15 +93,7 @@ class _RecentExpensesPageState extends State<RecentExpensesPage> {
         ),
         title: const Text(
           'All Expenses',
-<<<<<<< HEAD
           style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Color(0xFF1A1A2E)),
-=======
-          style: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF1A1A2E),
-          ),
->>>>>>> 7db71c92c0dfce72f1332176fa60e9d99cfb51b0
         ),
         centerTitle: true,
         actions: [
@@ -131,13 +103,7 @@ class _RecentExpensesPageState extends State<RecentExpensesPage> {
               child: Text(
                 '₹ ${total.toStringAsFixed(0)}',
                 style: const TextStyle(
-<<<<<<< HEAD
                   fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF2A7A50),
-=======
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF2A7A50),
->>>>>>> 7db71c92c0dfce72f1332176fa60e9d99cfb51b0
                 ),
               ),
             ),
@@ -153,7 +119,7 @@ class _RecentExpensesPageState extends State<RecentExpensesPage> {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               itemCount: _filters.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
               itemBuilder: (_, i) {
                 final f = _filters[i];
                 final isActive = f == _selectedFilter;
@@ -169,13 +135,7 @@ class _RecentExpensesPageState extends State<RecentExpensesPage> {
                       color: isActive ? const Color(0xFF1A1A2E) : Colors.white,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-<<<<<<< HEAD
                         color: isActive ? const Color(0xFF1A1A2E) : const Color(0xFFDDDDDD),
-=======
-                        color: isActive
-                            ? const Color(0xFF1A1A2E)
-                            : const Color(0xFFDDDDDD),
->>>>>>> 7db71c92c0dfce72f1332176fa60e9d99cfb51b0
                       ),
                     ),
                     child: Text(
@@ -183,13 +143,7 @@ class _RecentExpensesPageState extends State<RecentExpensesPage> {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-<<<<<<< HEAD
                         color: isActive ? Colors.white : const Color(0xFF666666),
-=======
-                        color: isActive
-                            ? Colors.white
-                            : const Color(0xFF666666),
->>>>>>> 7db71c92c0dfce72f1332176fa60e9d99cfb51b0
                       ),
                     ),
                   ),
@@ -215,19 +169,11 @@ class _RecentExpensesPageState extends State<RecentExpensesPage> {
                           _selectedFilter == 'All'
                               ? 'No expenses yet'
                               : 'No $_selectedFilter expenses',
-<<<<<<< HEAD
                           style: const TextStyle(fontSize: 15, color: Colors.grey),
-=======
-                          style: const TextStyle(
-                            fontSize: 15,
-                            color: Colors.grey,
-                          ),
->>>>>>> 7db71c92c0dfce72f1332176fa60e9d99cfb51b0
                         ),
                       ],
                     ),
                   )
-<<<<<<< HEAD
                 : ListView.builder(
                     padding: const EdgeInsets.only(top: 8, bottom: 24),
                     itemCount: listItems.length,
@@ -246,16 +192,6 @@ class _RecentExpensesPageState extends State<RecentExpensesPage> {
                       }
                       return const SizedBox.shrink();
                     },
-=======
-                : ListView.separated(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    itemCount: expenses.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 8),
-                    itemBuilder: (_, i) => _ExpenseTile(expense: expenses[i]),
->>>>>>> 7db71c92c0dfce72f1332176fa60e9d99cfb51b0
                   ),
           ),
         ],
@@ -356,13 +292,8 @@ class _ExpenseTile extends StatelessWidget {
           d.day == today.day) {
         dateLabel = 'Today';
       } else if (d.year == today.year &&
-<<<<<<< HEAD
                  d.month == today.month &&
                  d.day == today.day - 1) {
-=======
-          d.month == today.month &&
-          d.day == today.day - 1) {
->>>>>>> 7db71c92c0dfce72f1332176fa60e9d99cfb51b0
         dateLabel = 'Yesterday';
       } else {
         dateLabel = '${d.day}/${d.month}/${d.year}';
@@ -385,22 +316,12 @@ class _ExpenseTile extends StatelessWidget {
       child: Row(
         children: [
           Container(
-<<<<<<< HEAD
             width: 42, height: 42,
             decoration: BoxDecoration(
               color: e.color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(e.icon, color: e.color, size: 20),
-=======
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: e.color.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(e.icon, color: e.color, size: 22),
->>>>>>> 7db71c92c0dfce72f1332176fa60e9d99cfb51b0
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -410,7 +331,6 @@ class _ExpenseTile extends StatelessWidget {
                 Text(
                   e.merchant.isNotEmpty ? e.merchant : e.category,
                   style: const TextStyle(
-<<<<<<< HEAD
                     fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1A1A2E),
                   ),
                 ),
@@ -419,35 +339,12 @@ class _ExpenseTile extends StatelessWidget {
                   children: [
                     Text(dateLabel,
                         style: const TextStyle(fontSize: 11, color: Colors.grey)),
-=======
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1A1A2E),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    _Chip(label: e.category, color: e.color),
-                    const SizedBox(width: 6),
-                    Text(
-                      dateLabel,
-                      style: const TextStyle(fontSize: 11, color: Colors.grey),
-                    ),
->>>>>>> 7db71c92c0dfce72f1332176fa60e9d99cfb51b0
                     if (e.note.isNotEmpty) ...[
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
                           '· ${e.note}',
-<<<<<<< HEAD
                           style: const TextStyle(fontSize: 11, color: Colors.grey),
-=======
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey,
-                          ),
->>>>>>> 7db71c92c0dfce72f1332176fa60e9d99cfb51b0
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -464,13 +361,7 @@ class _ExpenseTile extends StatelessWidget {
               Text(
                 '-₹ ${e.amount.toStringAsFixed(0)}',
                 style: const TextStyle(
-<<<<<<< HEAD
                   fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFFE53935),
-=======
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFFE53935),
->>>>>>> 7db71c92c0dfce72f1332176fa60e9d99cfb51b0
                 ),
               ),
               Text(
@@ -484,33 +375,3 @@ class _ExpenseTile extends StatelessWidget {
     );
   }
 }
-<<<<<<< HEAD
-=======
-
-// ─── Chip ─────────────────────────────────────────────────────────────────────
-
-class _Chip extends StatelessWidget {
-  final String label;
-  final Color color;
-  const _Chip({required this.label, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 10,
-          color: color,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-}
->>>>>>> 7db71c92c0dfce72f1332176fa60e9d99cfb51b0

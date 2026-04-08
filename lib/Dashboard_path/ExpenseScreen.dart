@@ -90,7 +90,7 @@ class _AddExpensePageState extends State<AddExpensePage>
     with TickerProviderStateMixin {
   // 🔑 Gemini API Keys
   final List<String> _apiKeys = [
-    'AIzaSyADxrBOyJA74Is-QunypWwxgH4-MYEK2MU', // ← REPLACE with your own Gemini API keys
+    'AIzaSyD81_WGLPcDkPRlCZaOmRAsGqGMleEwkto', // ← REPLACE with your own Gemini API keys
   ];
 
   int _currentKeyIndex = 0;
@@ -262,7 +262,7 @@ class _AddExpensePageState extends State<AddExpensePage>
       'expenseDate': expenseDate,
       'description': _noteController.text.trim(),
       'paymentMethod': _selectedPaymentMethod,
-      'category': _selectedCategory,
+      'categoryName': _selectedCategory,   // ✅ field name backend expects
       'categoryId': resolvedId,
     };
     debugPrint('Request body       : ${jsonEncode(bodyMap)}');

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../colors/app_colors.dart';
 import '../screens/auth/welcome_screen.dart';
+import '../services/auth_state.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -66,6 +67,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
 
     if (confirm == true) {
+      AuthState.clear();
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
       if (mounted) {

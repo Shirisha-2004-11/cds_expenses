@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// lib/main.dart  (UPDATED — wires up ExpenseProvider)
+// lib/main.dart
 // ─────────────────────────────────────────────────────────────────────────────
 
 import 'package:flutter/material.dart';
@@ -24,7 +24,6 @@ void main() async {
   }
 
   runApp(
-    // ── Wrap the whole app so every screen can access ExpenseProvider ──
     ChangeNotifierProvider(
       create: (_) => ExpenseProvider(),
       child: const CDSExpensesApp(),
@@ -37,13 +36,20 @@ class CDSExpensesApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // If a token was restored from SharedPreferences, go straight to dashboard.
+    // Otherwise show the welcome / sign-in screen.
+    final Widget home = AuthState.isLoggedIn
+        ? const DashboardScreen()
+        : const WelcomeScreen();
+
     return MaterialApp(
       title: 'CDS Expenses',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const WelcomeScreen(),
+      home: home,
       routes: {
         '/dashboard': (context) => const DashboardScreen(),
+        '/welcome':   (context) => const WelcomeScreen(),
       },
     );
   }

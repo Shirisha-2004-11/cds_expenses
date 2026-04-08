@@ -17,10 +17,22 @@ class RecentExpensesPage extends StatefulWidget {
 class _RecentExpensesPageState extends State<RecentExpensesPage> {
   String _selectedFilter = 'All';
 
-  static const _filters = [
-    'All', 'Food', 'Travel', 'Supplies', 'Bills', 'Entertainment',
+  static const _baseCategories = [
+    'Food', 'Travel', 'Supplies', 'Bills', 'Entertainment',
     'Medical', 'Education', 'Rent', 'Petrol', 'Electricity', 'Home Services',
   ];
+
+  /// Base categories + any custom categories found in actual expenses
+  List<String> get _filters {
+    final baseLower = _baseCategories.map((c) => c.toLowerCase()).toSet();
+    final custom = widget.provider.allExpenses
+        .map((e) => e.category)
+        .where((c) => c.isNotEmpty && !baseLower.contains(c.toLowerCase()))
+        .toSet()
+        .toList()
+      ..sort();
+    return ['All', ..._baseCategories, ...custom];
+  }
 
   List<Expense> get _filtered {
     final all = widget.provider.allExpenses;
@@ -108,7 +120,7 @@ class _RecentExpensesPageState extends State<RecentExpensesPage> {
                 : ListView.separated(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     itemCount: expenses.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    separatorBuilder: (_, __) => const SizedBox(height: 8),
                     itemBuilder: (_, i) => _ExpenseTile(expense: expenses[i]),
                   ),
           ),

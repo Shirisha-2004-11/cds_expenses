@@ -302,7 +302,7 @@ class ExpenseProvider extends ChangeNotifier {
             (e) => Expense(
               id: UniqueKey().toString(),
               category: e.category,
-              merchant: e.category,
+              merchant: e.merchant,
               date: _todayIso(),
               note: e.subtitle,
               amount: e.amount.toDouble(),

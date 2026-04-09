@@ -120,7 +120,7 @@ class _RecentExpensesPageState extends State<RecentExpensesPage> {
                 : ListView.separated(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     itemCount: expenses.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
                     itemBuilder: (_, i) => _ExpenseTile(expense: expenses[i]),
                   ),
           ),

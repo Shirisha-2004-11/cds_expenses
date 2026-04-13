@@ -14,12 +14,13 @@ class Expense {
   final String id;
   final String category;
   final String merchant;
-  final String date; // ISO-8601 string  e.g. "2025-04-07"
+  final String date;       // ISO-8601 bill/expense date  e.g. "2025-04-07"
+  final String savedAt;  // ISO-8601 date the entry was saved  e.g. "2026-04-11"
   final String note;
   final double amount;
   final String paymentMethod;
 
-  const Expense({
+  Expense({
     required this.id,
     required this.category,
     required this.merchant,
@@ -27,7 +28,8 @@ class Expense {
     required this.note,
     required this.amount,
     required this.paymentMethod,
-  });
+    String? savedAt,
+  }) : savedAt = savedAt ?? date;
 
   /// Build from the API map returned by /expenses endpoint
   factory Expense.fromJson(Map<String, dynamic> j) {
@@ -38,6 +40,7 @@ class Expense {
     final pay = (j['paymentMethod'] ?? 'UPI').toString();
     final note = (j['note'] ?? j['subtitle'] ?? '').toString();
     final id = (j['id'] ?? j['expenseId'] ?? UniqueKey().toString()).toString();
+    final savedAt = (j['savedAt'] ?? j['createdAt'] ?? j['enteredAt'] ?? '').toString();
 
     return Expense(
       id: id,
@@ -47,6 +50,7 @@ class Expense {
       note: note,
       amount: amt,
       paymentMethod: pay,
+      savedAt: savedAt.isNotEmpty ? savedAt : date,
     );
   }
 
@@ -84,9 +88,19 @@ class Expense {
     }
   }
 
+  /// The bill/expense date (used only for display as "Bill: ...")
   DateTime? get parsedDate {
     try {
       return DateTime.parse(date);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// The date the entry was saved — used for all month/week/daily grouping
+  DateTime? get parsedSavedAt {
+    try {
+      return DateTime.parse(savedAt);
     } catch (_) {
       return null;
     }
@@ -109,11 +123,11 @@ class ExpenseProvider extends ChangeNotifier {
 
   List<Expense> get allExpenses => List.unmodifiable(_expenses);
 
-  // ── This month's expenses ──────────────────────────────────────────────────
+  // ── This month's expenses (by entry/saved date, not bill date) ───────────
   List<Expense> get thisMonthExpenses {
     final now = DateTime.now();
     return _expenses.where((e) {
-      final d = e.parsedDate;
+      final d = e.parsedSavedAt;
       return d != null && d.year == now.year && d.month == now.month;
     }).toList();
   }
@@ -152,7 +166,7 @@ class ExpenseProvider extends ChangeNotifier {
   Map<int, double> get dailySpendingMap {
     final map = <int, double>{};
     for (final e in thisMonthExpenses) {
-      final d = e.parsedDate;
+      final d = e.parsedSavedAt;
       if (d != null) {
         map[d.day] = (map[d.day] ?? 0) + e.amount;
       }
@@ -181,7 +195,7 @@ class ExpenseProvider extends ChangeNotifier {
       final target = DateTime(now.year, now.month - monthOffset, 1);
       final total = _expenses
           .where((e) {
-            final d = e.parsedDate;
+            final d = e.parsedSavedAt;
             return d != null &&
                 d.year == target.year &&
                 d.month == target.month;
@@ -233,7 +247,7 @@ class ExpenseProvider extends ChangeNotifier {
     final start = now.subtract(Duration(days: now.weekday - 1));
     return _expenses
         .where((e) {
-          final d = e.parsedDate;
+          final d = e.parsedSavedAt;
           return d != null &&
               !d.isBefore(DateTime(start.year, start.month, start.day));
         })
@@ -280,8 +294,8 @@ class ExpenseProvider extends ChangeNotifier {
   List<Expense> get recentExpenses {
     final sorted = List<Expense>.from(_expenses)
       ..sort((a, b) {
-        final da = a.parsedDate ?? DateTime(2000);
-        final db = b.parsedDate ?? DateTime(2000);
+        final da = a.parsedSavedAt ?? DateTime(2000);
+        final db = b.parsedSavedAt ?? DateTime(2000);
         return db.compareTo(da);
       });
     return sorted.take(10).toList();
@@ -303,7 +317,8 @@ class ExpenseProvider extends ChangeNotifier {
               id: UniqueKey().toString(),
               category: e.category,
               merchant: e.merchant,
-              date: _todayIso(),
+              date: e.date.isNotEmpty ? e.date : _todayIso(),
+              savedAt: e.savedAt.isNotEmpty ? e.savedAt : (e.date.isNotEmpty ? e.date : _todayIso()),
               note: e.subtitle,
               amount: e.amount.toDouble(),
               paymentMethod: 'UPI',
@@ -331,6 +346,7 @@ class ExpenseProvider extends ChangeNotifier {
     required String note,
     required double amount,
     required String paymentMethod,
+    String? savedAt,
   }) {
     _expenses.insert(
       0,
@@ -339,6 +355,7 @@ class ExpenseProvider extends ChangeNotifier {
         category: category,
         merchant: merchant,
         date: date.isNotEmpty ? date : _todayIso(),
+        savedAt: (savedAt != null && savedAt.isNotEmpty) ? savedAt : _todayIso(),
         note: note,
         amount: amount,
         paymentMethod: paymentMethod,

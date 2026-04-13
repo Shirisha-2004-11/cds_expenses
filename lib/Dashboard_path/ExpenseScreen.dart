@@ -78,7 +78,7 @@ class ReceiptLine {
 class AddExpensePage extends StatefulWidget {
   /// Called after a successful save so the dashboard can update instantly.
   final void Function(String category, String merchant, String date,
-      String note, double amount, String paymentMethod)? onExpenseAdded;
+      String note, double amount, String paymentMethod, String savedAt)? onExpenseAdded;
 
   const AddExpensePage({super.key, this.onExpenseAdded});
 
@@ -90,7 +90,7 @@ class _AddExpensePageState extends State<AddExpensePage>
     with TickerProviderStateMixin {
   // 🔑 Gemini API Keys
   final List<String> _apiKeys = [
-    'AIzaSyChbgqWxHrtwmM8tqPIcOZHBu4-78U9tsw',     // ← REPLACE with your own Gemini API keys
+    '.........',     // ← REPLACE with your own Gemini API keys
   ];
 
   int _currentKeyIndex = 0;
@@ -312,6 +312,7 @@ class _AddExpensePageState extends State<AddExpensePage>
           _noteController.text.trim(),
           double.tryParse(_amountController.text.trim()) ?? 0.0,
           _selectedPaymentMethod,
+          DateFormat('yyyy-MM-dd').format(DateTime.now()), // savedAt = today
         );
         Navigator.pop(context);
       } else if (response.statusCode == 403) {

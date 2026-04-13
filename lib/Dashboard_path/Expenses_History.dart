@@ -139,17 +139,25 @@ class _ExpenseTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final e     = expense;
-    final today = DateTime.now();
-    final d     = e.parsedDate;
-    String dateLabel = e.date;
+
+    // ── Entry-date label: "Today" if entered today, else plain date ──
+    String entryLabel = '';
+    final entryDate = e.parsedSavedAt;
+    if (entryDate != null) {
+      final now = DateTime.now();
+      final isToday = entryDate.year == now.year &&
+          entryDate.month == now.month &&
+          entryDate.day == now.day;
+      entryLabel = isToday
+          ? 'Today'
+          : '${entryDate.day}/${entryDate.month}/${entryDate.year}';
+    }
+
+    // ── Bill-date label (the actual expense/bill date) ──
+    String billLabel = '';
+    final d = e.parsedDate;
     if (d != null) {
-      if (d.year == today.year && d.month == today.month && d.day == today.day) {
-        dateLabel = 'Today';
-      } else if (d.year == today.year && d.month == today.month && d.day == today.day - 1) {
-        dateLabel = 'Yesterday';
-      } else {
-        dateLabel = '${d.day}/${d.month}/${d.year}';
-      }
+      billLabel = '· Bill: ${d.day}/${d.month}/${d.year}';
     }
 
     return Container(
@@ -178,7 +186,10 @@ class _ExpenseTile extends StatelessWidget {
                   children: [
                     _Chip(label: e.category, color: e.color),
                     const SizedBox(width: 6),
-                    Text(dateLabel, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                    if (entryLabel.isNotEmpty)
+                      Text(entryLabel, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                    if (billLabel.isNotEmpty)
+                      Text(billLabel, style: const TextStyle(fontSize: 11, color: Colors.grey)),
                     if (e.note.isNotEmpty) ...[
                       const SizedBox(width: 6),
                       Expanded(

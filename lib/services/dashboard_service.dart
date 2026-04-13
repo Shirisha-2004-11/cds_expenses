@@ -58,7 +58,8 @@ class InsightItem {
 class ExpenseItem {
   final String   category;   // real category: Food, Travel, Bills, Medical...
   final String   merchant;   // vendor/store name: trifecta, ola, udipi...
-  final String   date;
+  final String   date;       // bill/expense date from API
+  final String   savedAt;  // date the entry was saved/entered
   final String   subtitle;
   final int      amount;
   final IconData icon;
@@ -74,6 +75,7 @@ class ExpenseItem {
     required this.icon,
     required this.color,
     required this.highlight,
+    this.savedAt = '',
   });
 
   factory ExpenseItem.fromJson(Map<String, dynamic> j) {
@@ -85,6 +87,7 @@ class ExpenseItem {
       category:  cat,
       merchant:  merch,
       date:      (j['expenseDate'] ?? j['date'] ?? '').toString(),
+      savedAt: (j['savedAt'] ?? j['createdAt'] ?? j['enteredAt'] ?? '').toString(),
       subtitle:  (j['description'] ?? j['subtitle'] ?? '').toString(),
       amount:    (j['amount'] ?? 0).toInt(),
       icon:      _iconFor(cat),

@@ -340,20 +340,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
             )
           else
             ...recent.map((e) => _buildExpenseItem(e)),
+          const SizedBox(height: 12),
           Center(
-            child: TextButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => RecentExpensesPage(provider: p),
+            child: SizedBox(
+              width: 220,
+              child: TextButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => RecentExpensesPage(provider: p),
+                  ),
                 ),
-              ),
-              child: const Text(
-                'See All Expenses →',
-                style: TextStyle(
-                  color: Color(0xFF4A90D9),
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                style: TextButton.styleFrom(
+                  backgroundColor: const Color(0xFF2D7A6B),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                ),
+                child: const Text(
+                  'See  all expense',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.3,
+                  ),
                 ),
               ),
             ),
@@ -363,21 +375,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildExpenseItem(e) {
-    final today = DateTime.now();
-    final eDate = e.parsedDate as DateTime?;
-    String dateLabel = e.date as String;
-    if (eDate != null) {
-      if (eDate.year == today.year &&
-          eDate.month == today.month &&
-          eDate.day == today.day) {
-        dateLabel = 'Today';
-      } else if (eDate.year == today.year &&
-          eDate.month == today.month &&
-          eDate.day == today.day - 1) {
-        dateLabel = 'Yesterday';
-      }
+  Widget _buildExpenseItem(Expense e) {
+    // "Today" if entered today, otherwise plain date
+    String dateLabel = '';
+    try {
+      final saved = DateTime.parse(e.savedAt);
+      final now = DateTime.now();
+      final isToday = saved.year == now.year &&
+          saved.month == now.month &&
+          saved.day == now.day;
+      dateLabel = isToday
+          ? 'Today'
+          : '${saved.day}/${saved.month}/${saved.year}';
+    } catch (_) {
+      dateLabel = e.savedAt;
     }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -398,10 +411,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: (e.color as Color).withValues(alpha: 0.15),
+              color: e.color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(e.icon as IconData, color: e.color as Color, size: 20),
+            child: Icon(e.icon, color: e.color, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -409,7 +422,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  e.merchant as String,
+                  e.merchant,
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 13,
@@ -424,7 +437,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
           Text(
-            '-₹ ${(e.amount as double).toStringAsFixed(0)}',
+            '-₹ ${e.amount.toStringAsFixed(0)}',
             style: const TextStyle(
               fontWeight: FontWeight.w700,
               fontSize: 14,
@@ -456,17 +469,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
               context,
               MaterialPageRoute(
                 builder: (_) => AddExpensePage(
-                  onExpenseAdded:
-                      (category, merchant, date, note, amount, paymentMethod) {
-                        context.read<ExpenseProvider>().addExpense(
+                  onExpenseAdded: (category, merchant, date, note, amount,
+                      paymentMethod, savedAt) {
+                    context.read<ExpenseProvider>().addExpense(
                           category: category,
                           merchant: merchant,
                           date: date,
                           note: note,
                           amount: amount,
                           paymentMethod: paymentMethod,
+                          savedAt: savedAt,
                         );
-                      },
+                  },
                 ),
               ),
             );

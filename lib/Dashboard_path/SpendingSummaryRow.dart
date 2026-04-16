@@ -4,7 +4,7 @@
 
 import 'package:flutter/material.dart';
 import '../services/expense_provider.dart';
-import 'InsightsCards.dart';
+import 'insightscards.dart';
 
 // ─── Helper ──────────────────────────────────────────────────────────────────
 

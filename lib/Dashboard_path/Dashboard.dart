@@ -1,16 +1,17 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// lib/Dashboard_path/Dashboard.dart
+// lib/dashboard_path/Dashboard.dart
 // ─────────────────────────────────────────────────────────────────────────────
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import 'Monthly_analystics.dart';
-import 'SpendingSummaryRow.dart';
-import 'Greating_header.dart';
-import 'ExpenseScreen.dart';
-import 'Expenses_History.dart';
-import 'InsightsCards.dart';
+import 'monthly_analystics.dart';
+import 'spendingsummaryrow.dart';
+import 'greating_header.dart';
+import 'expensescreen.dart';
+import 'expenses_history.dart';
+import 'insightscards.dart';
 import 'profile_screen.dart';
 import 'budget_overview_screen.dart';
 import '../services/expense_provider.dart';
@@ -23,13 +24,32 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _currentNavIndex = 0;
+  String _userName = '';
 
   @override
   void initState() {
     super.initState();
+    _loadUserName();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ExpenseProvider>().loadAll();
     });
+  }
+
+  // ── Load name from SharedPreferences ──────────────────────────────────────
+  Future<void> _loadUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userName = prefs.getString('user_name') ?? 'User';
+    });
+  }
+
+  // ── Navigate to ProfileScreen and refresh name on return ──────────────────
+  Future<void> _openProfile() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ProfileScreen()),
+    );
+    await _loadUserName();
   }
 
   @override
@@ -52,6 +72,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // ── Home body ─────────────────────────────────────────────────────────────
   Widget _buildHomeBody(ExpenseProvider p) {
     return RefreshIndicator(
       onRefresh: () => context.read<ExpenseProvider>().refresh(),
@@ -60,7 +81,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const GreetingHeader(),
+            GreetingHeader(userName: _userName),
             const SizedBox(height: 12),
             MonthlyAnalyticsCard(monthlyTrend: p.monthlyTrend),
             const SizedBox(height: 12),
@@ -79,6 +100,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // ── Category icon helper ──────────────────────────────────────────────────
   IconData _iconForCategory(String cat) {
     switch (cat.toLowerCase()) {
       case 'food':
@@ -108,8 +130,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  // ── Insights card ─────────────────────────────────────────────────────────
   Widget _buildInsightsCard(ExpenseProvider p) {
     final insights = p.insightItems;
+
     if (insights.isEmpty) {
       return Container(
         margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -133,26 +157,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       );
     }
+
     final double total = insights.fold<double>(
       0.0,
       (s, e) => s + (e['amount'] as num).toDouble(),
     );
     if (total == 0) return const SizedBox.shrink();
+
     final now = DateTime.now();
     final monthName = const [
       '',
-      'January',
-      'February',
-      'March',
-      'April',
-      'May',
-      'June',
-      'July',
-      'August',
-      'September',
-      'October',
-      'November',
-      'December',
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December',
     ][now.month];
 
     return GestureDetector(
@@ -205,7 +221,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       data: insights
                           .map((e) => (e['amount'] as num).toDouble())
                           .toList(),
-                      colors: insights.map((e) => e['color'] as Color).toList(),
+                      colors: insights
+                          .map((e) => e['color'] as Color)
+                          .toList(),
                       total: total,
                     ),
                   ),
@@ -224,9 +242,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   width: 28,
                                   height: 28,
                                   decoration: BoxDecoration(
-                                    color: (e['color'] as Color).withValues(
-                                      alpha: 0.15,
-                                    ),
+                                    color: (e['color'] as Color)
+                                        .withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Icon(
@@ -271,7 +288,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   Text(
                     'View report',
-                    style: TextStyle(color: Color(0xFF4A90D9), fontSize: 13),
+                    style: TextStyle(
+                      color: Color(0xFF4A90D9),
+                      fontSize: 13,
+                    ),
                   ),
                   SizedBox(width: 4),
                   Icon(
@@ -288,6 +308,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // ── Recent expenses list ───────────────────────────────────────────────────
   Widget _buildRecentExpenses(ExpenseProvider p) {
     final recent = p.recentExpenses;
     return Container(
@@ -359,7 +380,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
                 child: const Text(
-                  'See  all expense',
+                  'See all expense',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 16,
@@ -375,8 +396,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // ── Single expense row ────────────────────────────────────────────────────
   Widget _buildExpenseItem(Expense e) {
-    // "Today" if entered today, otherwise plain date
     String dateLabel = '';
     try {
       final saved = DateTime.parse(e.savedAt);
@@ -449,10 +470,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // ── Bottom navigation bar ─────────────────────────────────────────────────
   Widget _buildBottomNav() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: const Color(0xFFD9D9D9),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.08),
@@ -461,83 +483,67 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
-      child: BottomNavigationBar(
-        currentIndex: _currentNavIndex,
-        onTap: (index) {
-          if (index == 1) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => AddExpensePage(
-                  onExpenseAdded: (category, merchant, date, note, amount,
-                      paymentMethod, savedAt) {
-                    context.read<ExpenseProvider>().addExpense(
-                          category: category,
-                          merchant: merchant,
-                          date: date,
-                          note: note,
-                          amount: amount,
-                          paymentMethod: paymentMethod,
-                          savedAt: savedAt,
-                        );
-                  },
-                ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 60,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              // ── Home ────────────────────────────────────────────────────
+              IconButton(
+                onPressed: () => setState(() => _currentNavIndex = 0),
+                icon: const Icon(Icons.home, color: Colors.black, size: 40),
               ),
-            );
-          } else if (index == 2) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ProfileScreen()),
-            );
-          } else {
-            setState(() => _currentNavIndex = index);
-          }
-        },
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF1A1A2E),
-        unselectedItemColor: Colors.grey,
-        selectedLabelStyle: const TextStyle(
-          fontWeight: FontWeight.w600,
-          fontSize: 11,
+
+              // ── Add expense ──────────────────────────────────────────────
+              IconButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AddExpensePage(
+                        onExpenseAdded: (category, merchant, date, note,
+                            amount, paymentMethod, savedAt) {
+                          context.read<ExpenseProvider>().addExpense(
+                                category: category,
+                                merchant: merchant,
+                                date: date,
+                                note: note,
+                                amount: amount,
+                                paymentMethod: paymentMethod,
+                                savedAt: savedAt,
+                              );
+                        },
+                      ),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.add, color: Colors.black, size: 44),
+              ),
+
+              // ── Profile ──────────────────────────────────────────────────
+              IconButton(
+                onPressed: _openProfile,
+                icon: const Icon(Icons.person, color: Colors.black, size: 40),
+              ),
+            ],
+          ),
         ),
-        unselectedLabelStyle: const TextStyle(fontSize: 11),
-        elevation: 0,
-        items: [
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Container(
-              width: 44,
-              height: 44,
-              decoration: const BoxDecoration(
-                color: Color(0xFF1A1A2E),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.add, color: Colors.white, size: 24),
-            ),
-            label: 'Add',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
       ),
     );
   }
 }
 
-// ── Painters ──────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Painters
+// ─────────────────────────────────────────────────────────────────────────────
 
 class BarChartPainter extends CustomPainter {
   final List<double> data;
   final List<String> labels;
   BarChartPainter({required this.data, required this.labels});
+
   @override
   void paint(Canvas canvas, Size size) {
     if (data.isEmpty) return;
@@ -595,6 +601,7 @@ class DonutChartPainter extends CustomPainter {
     required this.colors,
     required this.total,
   });
+
   @override
   void paint(Canvas canvas, Size size) {
     if (data.isEmpty || total == 0) return;

@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:cds_expenses/screens/auth/welcome_screen.dart';
-import 'package:cds_expenses/Dashboard_path/Dashboard.dart';
+import 'package:cds_expenses/dashboard_path/dashboard.dart';
 import 'package:cds_expenses/theme/app_theme.dart';
 import 'package:cds_expenses/services/auth_state.dart';
 import 'package:cds_expenses/services/expense_provider.dart';

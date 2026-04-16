@@ -4,11 +4,11 @@ import '../../colors/app_colors.dart';
 import '../../constants/app_strings.dart';
 import '../../widgets/common/primary_button.dart';
 import '../../widgets/common/outlined_primary_button.dart';
-import '../../widgets/common/microsoft_button.dart';
-import '../../widgets/common/or_divider.dart';
+// import '../../widgets/common/microsoft_button.dart';
+// import '../../widgets/common/or_divider.dart';
 import 'sign_in_screen.dart';
 import 'sign_up_screen.dart';
-import 'microsoft_auth_service.dart';
+// import 'microsoft_auth_service.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -18,25 +18,25 @@ class WelcomeScreen extends StatefulWidget {
 }
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
-  bool _microsoftLoading = false;
+  // bool _microsoftLoading = false;
 
-  Future<void> _handleMicrosoftLogin() async {
-    setState(() => _microsoftLoading = true);
-    try {
-      await MicrosoftAuthService.signIn(context);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppStrings.microsoftLoginFailed),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _microsoftLoading = false);
-    }
-  }
+  // Future<void> _handleMicrosoftLogin() async {
+  //   setState(() => _microsoftLoading = true);
+  //   try {
+  //     await MicrosoftAuthService.signIn(context);
+  //   } catch (e) {
+  //     if (mounted) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(
+  //           content: Text(AppStrings.microsoftLoginFailed),
+  //           backgroundColor: AppColors.error,
+  //         ),
+  //       );
+  //     }
+  //   } finally {
+  //     if (mounted) setState(() => _microsoftLoading = false);
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -104,16 +104,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                               ),
                             ),
 
-                            const SizedBox(height: 24),
-                            const OrDivider(),
-                            const SizedBox(height: 24),
+                            // const SizedBox(height: 24),
+                            // const OrDivider(),
+                            // const SizedBox(height: 24),
 
-                            MicrosoftButton(
-                              isLoading: _microsoftLoading,
-                              onPressed: _handleMicrosoftLogin,
-                            ),
+                            // MicrosoftButton(
+                            //   isLoading: _microsoftLoading,
+                            //   onPressed: _handleMicrosoftLogin,
+                            // ),
 
-                            const SizedBox(height: 32),
+                            // const SizedBox(height: 32),
                           ],
                         ),
                       ),

@@ -45,22 +45,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text(
           'Log out',
-          style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, color: Color(0xFF5A5A5A)),
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF5A5A5A),
+          ),
         ),
         content: const Text(
           'Are you sure you want to log out?',
-          style: TextStyle(fontFamily: 'Poppins', fontSize: 14, color: Color(0xFF6B6B6B)),
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 14,
+            color: Color(0xFF6B6B6B),
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel',
-                style: TextStyle(fontFamily: 'Poppins', color: Color(0xFF6B6B6B), fontWeight: FontWeight.w500)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                color: Color(0xFF6B6B6B),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Log out',
-                style: TextStyle(fontFamily: 'Poppins', color: Color(0xFF750909), fontWeight: FontWeight.w600)),
+            child: const Text(
+              'Log out',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                color: Color(0xFF750909),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
@@ -90,17 +110,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text(
           'Edit Profile',
-          style: TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w600, color: Color(0xFF5A5A5A)),
+          style: TextStyle(
+            fontFamily: 'Poppins',
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF5A5A5A),
+          ),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // ── Name field — fully editable ────────────────────────────
             TextField(
               controller: nameController,
               decoration: InputDecoration(
                 labelText: 'Name',
-                labelStyle: const TextStyle(fontFamily: 'Poppins', color: Color(0xFF6B6B6B)),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                labelStyle: const TextStyle(
+                  fontFamily: 'Poppins',
+                  color: Color(0xFF6B6B6B),
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: const BorderSide(color: AppColors.primary),
@@ -109,18 +139,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
               style: const TextStyle(fontFamily: 'Poppins'),
             ),
             const SizedBox(height: 12),
+            // ── Email field — read-only / disabled ─────────────────────
             TextField(
               controller: emailController,
+              enabled: false, // not editable
               decoration: InputDecoration(
                 labelText: 'Email',
-                labelStyle: const TextStyle(fontFamily: 'Poppins', color: Color(0xFF6B6B6B)),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.primary),
+                labelStyle: const TextStyle(
+                  fontFamily: 'Poppins',
+                  color: Color(0xFF6B6B6B),
                 ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                disabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                ),
+                filled: true,
+                fillColor: const Color(0xFFF5F5F5),
               ),
-              style: const TextStyle(fontFamily: 'Poppins'),
+              style: const TextStyle(
+                fontFamily: 'Poppins',
+                color: Color(0xFFAAAAAA),
+              ),
               keyboardType: TextInputType.emailAddress,
             ),
           ],
@@ -128,24 +170,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel',
-                style: TextStyle(fontFamily: 'Poppins', color: Color(0xFF6B6B6B))),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                color: Color(0xFF6B6B6B),
+              ),
+            ),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Save',
-                style: TextStyle(fontFamily: 'Poppins', color: AppColors.primary, fontWeight: FontWeight.w600)),
+            child: const Text(
+              'Save',
+              style: TextStyle(
+                fontFamily: 'Poppins',
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),
     );
 
     if (saved == true) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_name',  nameController.text.trim());
+      final newName = nameController.text.trim();
+      final prefs   = await SharedPreferences.getInstance();
+      await prefs.setString('user_name',  newName);
       await prefs.setString('user_email', emailController.text.trim());
       setState(() {
-        _userName  = nameController.text.trim();
+        _userName  = newName;
         _userEmail = emailController.text.trim();
       });
     }
@@ -159,7 +213,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF5A5A5A), size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            color: Color(0xFF5A5A5A),
+            size: 20,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
@@ -174,52 +232,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
         centerTitle: true,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            )
           : SafeArea(
               child: LayoutBuilder(
                 builder: (context, constraints) {
-                  final double maxWidth = constraints.maxWidth > 480 ? 420 : constraints.maxWidth;
+                  final double maxWidth =
+                      constraints.maxWidth > 480 ? 420 : constraints.maxWidth;
                   return Center(
                     child: SizedBox(
                       width: maxWidth,
-                      // Use Column so profile is at top and logout at bottom
                       child: Column(
                         children: [
                           Expanded(
                             child: SingleChildScrollView(
-                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const SizedBox(height: 12),
-
-                                  // ── Profile card at the top ──────────────
                                   _ProfileCard(
                                     userName:  _userName,
                                     userEmail: _userEmail,
                                     initials:  _initials,
                                     onEditTap: _handleEditProfile,
                                   ),
-
                                   const SizedBox(height: 28),
-
-                                  // ── Support section label ────────────────
-                                  // const Text(
-                                  //   'Support',
-                                  //   style: TextStyle(
-                                  //     fontFamily: 'Poppins',
-                                  //     fontSize: 16,
-                                  //     fontWeight: FontWeight.w600,
-                                  //     color: Color(0xFF5A5A5A),
-                                  //   ),
-                                  // ),
-                                  // const SizedBox(height: 10),
                                 ],
                               ),
                             ),
                           ),
 
-                          // ── Logout button pinned at the bottom ───────────
+                          // ── Logout button pinned at the bottom ─────────
                           Padding(
                             padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
                             child: GestureDetector(

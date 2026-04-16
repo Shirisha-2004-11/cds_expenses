@@ -77,8 +77,16 @@ class ReceiptLine {
 
 class AddExpensePage extends StatefulWidget {
   /// Called after a successful save so the dashboard can update instantly.
-  final void Function(String category, String merchant, String date,
-      String note, double amount, String paymentMethod, String savedAt)? onExpenseAdded;
+  final void Function(
+    String category,
+    String merchant,
+    String date,
+    String note,
+    double amount,
+    String paymentMethod,
+    String savedAt,
+  )?
+  onExpenseAdded;
 
   const AddExpensePage({super.key, this.onExpenseAdded});
 
@@ -90,7 +98,7 @@ class _AddExpensePageState extends State<AddExpensePage>
     with TickerProviderStateMixin {
   // 🔑 Gemini API Keys
   final List<String> _apiKeys = [
-    '.........',     // ← REPLACE with your own Gemini API keys
+    '...........', // ← REPLACE with your own Gemini API keys
   ];
 
   int _currentKeyIndex = 0;
@@ -133,16 +141,16 @@ class _AddExpensePageState extends State<AddExpensePage>
   // Matches backend IDs: 1-Food 2-Travel 3-Supplies 4-Bills 5-Entertainment
   // 6-Medical 7-Education 8-Rent 9-Petrol 10-Electricity 11-Home Services
   final List<Map<String, String>> _baseCategories = [
-    {'label': 'Food',          'emoji': '🍔'},
-    {'label': 'Travel',        'emoji': '✈️'},
-    {'label': 'Supplies',      'emoji': '🛒'},
-    {'label': 'Bills',         'emoji': '💡'},
+    {'label': 'Food', 'emoji': '🍔'},
+    {'label': 'Travel', 'emoji': '✈️'},
+    {'label': 'Supplies', 'emoji': '🛒'},
+    {'label': 'Bills', 'emoji': '💡'},
     {'label': 'Entertainment', 'emoji': '🎮'},
-    {'label': 'Medical',       'emoji': '💊'},
-    {'label': 'Education',     'emoji': '🎓'},
-    {'label': 'Rent',          'emoji': '🏠'},
-    {'label': 'Petrol',        'emoji': '⛽'},
-    {'label': 'Electricity',   'emoji': '⚡'},
+    {'label': 'Medical', 'emoji': '💊'},
+    {'label': 'Education', 'emoji': '🎓'},
+    {'label': 'Rent', 'emoji': '🏠'},
+    {'label': 'Petrol', 'emoji': '⛽'},
+    {'label': 'Electricity', 'emoji': '⚡'},
     {'label': 'Home Services', 'emoji': '🔧'},
   ];
 
@@ -186,7 +194,10 @@ class _AddExpensePageState extends State<AddExpensePage>
 
         final map = <String, int>{};
         for (final item in list) {
-          final name = (item['name'] ?? item['categoryName'] ?? '').toString().toLowerCase().trim();
+          final name = (item['name'] ?? item['categoryName'] ?? '')
+              .toString()
+              .toLowerCase()
+              .trim();
           final id = item['id'] ?? item['categoryId'];
           if (name.isNotEmpty && id != null) {
             map[name] = (id as num).toInt();
@@ -205,7 +216,8 @@ class _AddExpensePageState extends State<AddExpensePage>
     final key = _selectedCategory.toLowerCase().trim();
     if (_categoryMap.containsKey(key)) return _categoryMap[key]!;
     for (final entry in _categoryMap.entries) {
-      if (entry.key.contains(key) || key.contains(entry.key)) return entry.value;
+      if (entry.key.contains(key) || key.contains(entry.key))
+        {return entry.value;}
     }
     return _categoryMap.values.isNotEmpty ? _categoryMap.values.first : 1;
   }
@@ -221,14 +233,23 @@ class _AddExpensePageState extends State<AddExpensePage>
     super.dispose();
   }
 
+  // ─── Smart year resolver ──────────────────────────────────────────────────
+  // When a receipt only has "Month Day" (e.g. "December 18"), we guess the year.
+  // If that month is more than 1 month ahead of today, it's probably last year.
+  int _guessYear(int month) {
+    final now = DateTime.now();
+    if (month > now.month + 1) return now.year - 1;
+    return now.year;
+  }
+
   // ─── Save Expense to API ──────────────────────────────────────────────────
 
   Future<void> _saveExpense() async {
     // Validation
     if (_amountController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter an amount')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter an amount')));
       return;
     }
     if (_merchantController.text.trim().isEmpty) {
@@ -238,17 +259,23 @@ class _AddExpensePageState extends State<AddExpensePage>
       return;
     }
 
-    // Convert date "April 23" → "2026-04-23"
+    // Convert date "April 23" → "YYYY-04-23" using smart year guessing
     String expenseDate;
     try {
-      final parsed = DateFormat('MMMM d').parse(_dateController.text.trim());
-      expenseDate = DateFormat('yyyy-MM-dd').format(
-        DateTime(DateTime.now().year, parsed.month, parsed.day),
-      );
-    } catch (_) {
-      expenseDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    }
-
+  DateTime parsed;
+  final text = _dateController.text.trim();
+  // Try full date with year first (from scan)
+  try {
+    parsed = DateFormat('MMMM d yyyy').parse(text);
+  } catch (_) {
+    // Fallback: old "Month Day" format without year
+    final p = DateFormat('MMMM d').parse(text);
+    parsed = DateTime(_guessYear(p.month), p.month, p.day);
+  }
+  expenseDate = DateFormat('yyyy-MM-dd').format(parsed);
+} catch (_) {
+  expenseDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
+}
     // ── DEBUG: trace exactly what is sent and what backend returns ──────────
     final resolvedId = _resolvedCategoryId();
     debugPrint('══════════════ SAVE EXPENSE DEBUG ══════════════');
@@ -262,8 +289,9 @@ class _AddExpensePageState extends State<AddExpensePage>
       'expenseDate': expenseDate,
       'description': _noteController.text.trim(),
       'paymentMethod': _selectedPaymentMethod,
-      'categoryName': _selectedCategory,   // ✅ field name backend expects
+      'categoryName': _selectedCategory, // ✅ field name backend expects
       'categoryId': resolvedId,
+      'savedAt': DateFormat('yyyy-MM-dd').format(DateTime.now()), // ← ADD THIS
     };
     debugPrint('Request body       : ${jsonEncode(bodyMap)}');
     debugPrint('Posting to         : ${ApiConfig.expenses}');
@@ -290,7 +318,11 @@ class _AddExpensePageState extends State<AddExpensePage>
       if (response.statusCode == 200 || response.statusCode == 201) {
         try {
           final saved = jsonDecode(response.body);
-          final savedCat = saved['category'] ?? saved['categoryName'] ?? saved['categoryId'] ?? '?';
+          final savedCat =
+              saved['category'] ??
+              saved['categoryName'] ??
+              saved['categoryId'] ??
+              '?';
           debugPrint('Backend saved category as: $savedCat');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -301,7 +333,10 @@ class _AddExpensePageState extends State<AddExpensePage>
           );
         } catch (_) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Expense saved!'), backgroundColor: Color(0xFF2D6A5A)),
+            const SnackBar(
+              content: Text('Expense saved!'),
+              backgroundColor: Color(0xFF2D6A5A),
+            ),
           );
         }
         // ── Notify dashboard so all pages update immediately ──
@@ -317,7 +352,10 @@ class _AddExpensePageState extends State<AddExpensePage>
         Navigator.pop(context);
       } else if (response.statusCode == 403) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Session expired. Please log in again.'), backgroundColor: Colors.redAccent),
+          const SnackBar(
+            content: Text('Session expired. Please log in again.'),
+            backgroundColor: Colors.redAccent,
+          ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -331,7 +369,10 @@ class _AddExpensePageState extends State<AddExpensePage>
       if (!mounted) return;
       debugPrint('Network error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Network error: $e'), backgroundColor: Colors.redAccent),
+        SnackBar(
+          content: Text('Network error: $e'),
+          backgroundColor: Colors.redAccent,
+        ),
       );
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -341,138 +382,133 @@ class _AddExpensePageState extends State<AddExpensePage>
   // ─── Category Helpers ─────────────────────────────────────────────────────
 
   /// Known merchant → correct category overrides.
-  /// When a scanned bill's merchant matches any key (case-insensitive substring),
-  /// this category is used instead of whatever the AI returned.
   static const Map<String, String> _merchantCategoryOverrides = {
     // Medical (ID 6)
-    'apollo'        : 'Medical',
-    'medplus'       : 'Medical',
-    'netmeds'       : 'Medical',
-    'pharmeasy'     : 'Medical',
-    '1mg'           : 'Medical',
-    'practo'        : 'Medical',
-    'fortis'        : 'Medical',
-    'manipal'       : 'Medical',
-    'narayana'      : 'Medical',
-    'max hospital'  : 'Medical',
-    'aiims'         : 'Medical',
-    'cipla'         : 'Medical',
-    'clinic'        : 'Medical',
-    'hospital'      : 'Medical',
-    'pharmacy'      : 'Medical',
-    'diagnostic'    : 'Medical',
+    'apollo': 'Medical',
+    'medplus': 'Medical',
+    'netmeds': 'Medical',
+    'pharmeasy': 'Medical',
+    '1mg': 'Medical',
+    'practo': 'Medical',
+    'fortis': 'Medical',
+    'manipal': 'Medical',
+    'narayana': 'Medical',
+    'max hospital': 'Medical',
+    'aiims': 'Medical',
+    'cipla': 'Medical',
+    'clinic': 'Medical',
+    'hospital': 'Medical',
+    'pharmacy': 'Medical',
+    'diagnostic': 'Medical',
     // Food (ID 1)
-    'swiggy'        : 'Food',
-    'zomato'        : 'Food',
-    'udipi'         : 'Food',
-    'udupi'         : 'Food',
-    'dominos'       : 'Food',
-    'pizza hut'     : 'Food',
-    'mcdonald'      : 'Food',
-    'kfc'           : 'Food',
-    'subway'        : 'Food',
-    'burger king'   : 'Food',
-    'starbucks'     : 'Food',
-    'cafe coffee'   : 'Food',
-    'haldiram'      : 'Food',
-    'barbeque'      : 'Food',
-    'restaurant'    : 'Food',
-    'dhaba'         : 'Food',
+    'swiggy': 'Food',
+    'zomato': 'Food',
+    'udipi': 'Food',
+    'udupi': 'Food',
+    'dominos': 'Food',
+    'pizza hut': 'Food',
+    'mcdonald': 'Food',
+    'kfc': 'Food',
+    'subway': 'Food',
+    'burger king': 'Food',
+    'starbucks': 'Food',
+    'cafe coffee': 'Food',
+    'haldiram': 'Food',
+    'barbeque': 'Food',
+    'restaurant': 'Food',
+    'dhaba': 'Food',
     // Travel (ID 2)
-    'ola'           : 'Travel',
-    'uber'          : 'Travel',
-    'rapido'        : 'Travel',
-    'bmtc'          : 'Travel',
-    'irctc'         : 'Travel',
-    'indigo'        : 'Travel',
-    'air india'     : 'Travel',
-    'spicejet'      : 'Travel',
-    'goibibo'       : 'Travel',
-    'makemytrip'    : 'Travel',
-    'redbus'        : 'Travel',
-    'metro'         : 'Travel',
-    'namma metro'   : 'Travel',
+    'ola': 'Travel',
+    'uber': 'Travel',
+    'rapido': 'Travel',
+    'bmtc': 'Travel',
+    'irctc': 'Travel',
+    'indigo': 'Travel',
+    'air india': 'Travel',
+    'spicejet': 'Travel',
+    'goibibo': 'Travel',
+    'makemytrip': 'Travel',
+    'redbus': 'Travel',
+    'metro': 'Travel',
+    'namma metro': 'Travel',
     // Bills (ID 4)
-    'airtel'        : 'Bills',
-    'jio'           : 'Bills',
-    'bsnl'          : 'Bills',
-    'vodafone'      : 'Bills',
-    'broadband'     : 'Bills',
+    'airtel': 'Bills',
+    'jio': 'Bills',
+    'bsnl': 'Bills',
+    'vodafone': 'Bills',
+    'broadband': 'Bills',
     // Petrol (ID 9)
-    'bpcl'          : 'Petrol',
-    'hpcl'          : 'Petrol',
-    'iocl'          : 'Petrol',
+    'bpcl': 'Petrol',
+    'hpcl': 'Petrol',
+    'iocl': 'Petrol',
     'bharat petroleum': 'Petrol',
-    'indian oil'    : 'Petrol',
+    'indian oil': 'Petrol',
     'hindustan petroleum': 'Petrol',
-    'nayara'        : 'Petrol',
-    'petrol'        : 'Petrol',
-    'fuel'          : 'Petrol',
-    'diesel'        : 'Petrol',
+    'nayara': 'Petrol',
+    'petrol': 'Petrol',
+    'fuel': 'Petrol',
+    'diesel': 'Petrol',
     // Electricity (ID 10)
-    'bescom'        : 'Electricity',
-    'bbmp'          : 'Electricity',
-    'bwssb'         : 'Electricity',
-    'electricity'   : 'Electricity',
-    'tneb'          : 'Electricity',
-    'mseb'          : 'Electricity',
-    'tata power'    : 'Electricity',
+    'bescom': 'Electricity',
+    'bbmp': 'Electricity',
+    'bwssb': 'Electricity',
+    'electricity': 'Electricity',
+    'tneb': 'Electricity',
+    'mseb': 'Electricity',
+    'tata power': 'Electricity',
     'adani electricity': 'Electricity',
     // Supplies (ID 3)
-    'bigbasket'     : 'Supplies',
-    'blinkit'       : 'Supplies',
-    'zepto'         : 'Supplies',
-    'dmart'         : 'Supplies',
+    'bigbasket': 'Supplies',
+    'blinkit': 'Supplies',
+    'zepto': 'Supplies',
+    'dmart': 'Supplies',
     'reliance fresh': 'Supplies',
-    'spencer'       : 'Supplies',
-    'nilgiris'      : 'Supplies',
-    'amazon'        : 'Supplies',
-    'flipkart'      : 'Supplies',
-    'myntra'        : 'Supplies',
-    'lifestyle'     : 'Supplies',
-    'max fashion'   : 'Supplies',
-    'westside'      : 'Supplies',
-    'nykaa'         : 'Supplies',
+    'spencer': 'Supplies',
+    'nilgiris': 'Supplies',
+    'amazon': 'Supplies',
+    'flipkart': 'Supplies',
+    'myntra': 'Supplies',
+    'lifestyle': 'Supplies',
+    'max fashion': 'Supplies',
+    'westside': 'Supplies',
+    'nykaa': 'Supplies',
     // Entertainment (ID 5)
-    'pvr'           : 'Entertainment',
-    'inox'          : 'Entertainment',
-    'netflix'       : 'Entertainment',
-    'hotstar'       : 'Entertainment',
-    'amazon prime'  : 'Entertainment',
-    'spotify'       : 'Entertainment',
-    'bookmyshow'    : 'Entertainment',
+    'pvr': 'Entertainment',
+    'inox': 'Entertainment',
+    'netflix': 'Entertainment',
+    'hotstar': 'Entertainment',
+    'amazon prime': 'Entertainment',
+    'spotify': 'Entertainment',
+    'bookmyshow': 'Entertainment',
     // Education (ID 7)
-    'byju'          : 'Education',
-    'unacademy'     : 'Education',
-    'coursera'      : 'Education',
-    'udemy'         : 'Education',
-    'vedantu'       : 'Education',
-    'school'        : 'Education',
-    'college'       : 'Education',
-    'university'    : 'Education',
+    'byju': 'Education',
+    'unacademy': 'Education',
+    'coursera': 'Education',
+    'udemy': 'Education',
+    'vedantu': 'Education',
+    'school': 'Education',
+    'college': 'Education',
+    'university': 'Education',
     // Rent (ID 8)
-    'rent'          : 'Rent',
-    'hostel'        : 'Rent',
+    'rent': 'Rent',
+    'hostel': 'Rent',
     // Home Services (ID 11)
-    'urban company' : 'Home Services',
-    'urbanclap'     : 'Home Services',
-    'plumber'       : 'Home Services',
-    'electrician'   : 'Home Services',
-    'carpenter'     : 'Home Services',
-    'cleaning'      : 'Home Services',
-    'pest control'  : 'Home Services',
-    'painting'      : 'Home Services',
+    'urban company': 'Home Services',
+    'urbanclap': 'Home Services',
+    'plumber': 'Home Services',
+    'electrician': 'Home Services',
+    'carpenter': 'Home Services',
+    'cleaning': 'Home Services',
+    'pest control': 'Home Services',
+    'painting': 'Home Services',
   };
 
-  /// Checks the merchant name (and optionally extra text) against the override
-  /// table. If matched, returns the correct category label; otherwise falls
-  /// back to [aiCategory] (what the scan AI returned).
   String _resolveCategoryFromMerchant(String merchant, String aiCategory) {
     final m = merchant.toLowerCase().trim();
     for (final entry in _merchantCategoryOverrides.entries) {
       if (m.contains(entry.key)) return entry.value;
     }
-    return aiCategory; // AI category trusted only when no override matches
+    return aiCategory;
   }
 
   String _formatCategory(String raw) {
@@ -485,23 +521,103 @@ class _AddExpensePageState extends State<AddExpensePage>
 
   String _getEmojiForCategory(String category) {
     final c = category.toLowerCase();
-    if (c.contains('petrol') || c.contains('fuel') || c.contains('gas') || c.contains('diesel') || c.contains('bpcl') || c.contains('hpcl') || c.contains('iocl') || c.contains('bharat petroleum') || c.contains('indian oil') || c.contains('hindustan petroleum')||c.contains('nayara energy')) return '⛽';
-    if (c.contains('medical') || c.contains('doctor') || c.contains('hospital') || c.contains('pharmacy') || c.contains('clinic') || c.contains('apollo') || c.contains('medplus') || c.contains('netmeds')) return '💊';
-    if (c.contains('grocery') || c.contains('vegetable') || c.contains('supermarket') || c.contains('bigbasket') || c.contains('zepto') || c.contains('blinkit') || c.contains('dmart')) return '🥦';
-    if (c.contains('gym') || c.contains('fitness') || c.contains('workout') || c.contains('cult')) return '🏋️';
-    if (c.contains('electricity') || c.contains('power') || c.contains('bescom') || c.contains('tneb')) return '⚡';
-    if (c.contains('internet') || c.contains('wifi') || c.contains('broadband') || c.contains('jio') || c.contains('airtel') || c.contains('bsnl')) return '🌐';
+    if (c.contains('petrol') ||
+        c.contains('fuel') ||
+        c.contains('gas') ||
+        c.contains('diesel') ||
+        c.contains('bpcl') ||
+        c.contains('hpcl') ||
+        c.contains('iocl') ||
+        c.contains('bharat petroleum') ||
+        c.contains('indian oil') ||
+        c.contains('hindustan petroleum') ||
+        c.contains('nayara energy'))
+      {return '⛽';}
+    if (c.contains('medical') ||
+        c.contains('doctor') ||
+        c.contains('hospital') ||
+        c.contains('pharmacy') ||
+        c.contains('clinic') ||
+        c.contains('apollo') ||
+        c.contains('medplus') ||
+        c.contains('netmeds'))
+      {return '💊';}
+    if (c.contains('grocery') ||
+        c.contains('vegetable') ||
+        c.contains('supermarket') ||
+        c.contains('bigbasket') ||
+        c.contains('zepto') ||
+        c.contains('blinkit') ||
+        c.contains('dmart'))
+      {return '🥦';}
+    if (c.contains('gym') ||
+        c.contains('fitness') ||
+        c.contains('workout') ||
+        c.contains('cult'))
+      {return '🏋️';}
+    if (c.contains('electricity') ||
+        c.contains('power') ||
+        c.contains('bescom') ||
+        c.contains('tneb'))
+      {return '⚡';}
+    if (c.contains('internet') ||
+        c.contains('wifi') ||
+        c.contains('broadband') ||
+        c.contains('jio') ||
+        c.contains('airtel') ||
+        c.contains('bsnl'))
+      {return '🌐';}  
     if (c.contains('insurance')) return '🛡️';
-    if (c.contains('shopping') || c.contains('clothes') || c.contains('fashion') || c.contains('amazon') || c.contains('flipkart') || c.contains('myntra')) return '🛍️';
-    if (c.contains('food') || c.contains('restaurant') || c.contains('swiggy') || c.contains('zomato') || c.contains('dining')) return '🍔';
-    if (c.contains('travel') || c.contains('flight') || c.contains('train') || c.contains('bus') || c.contains('ola') || c.contains('uber') || c.contains('rapido')) return '✈️';
-    if (c.contains('rent') || c.contains('house') || c.contains('home') || c.contains('housing')) return '🏠';
-    if (c.contains('education') || c.contains('school') || c.contains('college') || c.contains('tuition') || c.contains('course')) return '🎓';
-    if (c.contains('entertainment') || c.contains('movie') || c.contains('netflix') || c.contains('hotstar') || c.contains('amazon prime')) return '🎬';
-    if (c.contains('salon') || c.contains('spa') || c.contains('beauty') || c.contains('grooming')) return '💈';
+    if (c.contains('shopping') ||
+        c.contains('clothes') ||
+        c.contains('fashion') ||
+        c.contains('amazon') ||
+        c.contains('flipkart') ||
+        c.contains('myntra'))
+      {return '🛍️';}
+    if (c.contains('food') ||
+        c.contains('restaurant') ||
+        c.contains('swiggy') ||
+        c.contains('zomato') ||
+        c.contains('dining'))
+      {return '🍔';}
+    if (c.contains('travel') ||
+        c.contains('flight') ||
+        c.contains('train') ||
+        c.contains('bus') ||
+        c.contains('ola') ||
+        c.contains('uber') ||
+        c.contains('rapido'))
+      {return '✈️';}
+    if (c.contains('rent') ||
+        c.contains('house') ||
+        c.contains('home') ||
+        c.contains('housing'))
+      {return '🏠';}
+    if (c.contains('education') ||
+        c.contains('school') ||
+        c.contains('college') ||
+        c.contains('tuition') ||
+        c.contains('course'))
+      {return '🎓';}
+    if (c.contains('entertainment') ||
+        c.contains('movie') ||
+        c.contains('netflix') ||
+        c.contains('hotstar') ||
+        c.contains('amazon prime'))
+      {return '🎬';}
+    if (c.contains('salon') ||
+        c.contains('spa') ||
+        c.contains('beauty') ||
+        c.contains('grooming'))
+      {return '💈';}
     if (c.contains('pet')) return '🐾';
     if (c.contains('bill') || c.contains('utility')) return '💡';
-    if (c.contains('cafe') || c.contains('coffee') || c.contains('starbucks') || c.contains('chai')) return '☕';
+    if (c.contains('cafe') ||
+        c.contains('coffee') ||
+        c.contains('starbucks') ||
+        c.contains('chai'))
+      {return '☕';}
     return '📌';
   }
 
@@ -564,47 +680,58 @@ class _AddExpensePageState extends State<AddExpensePage>
 
       final imageBytes = await pickedFile.readAsBytes();
       final extension = pickedFile.path.split('.').last.toLowerCase();
-      final mimeType = extension == 'png' ? 'image/png' : extension == 'heic' ? 'image/heic' : 'image/jpeg';
+      final mimeType = extension == 'png'
+          ? 'image/png'
+          : extension == 'heic'
+          ? 'image/heic'
+          : 'image/jpeg';
 
       final model = GenerativeModel(
         model: 'gemini-2.5-flash',
         apiKey: _apiKeys[_currentKeyIndex],
-        generationConfig: GenerationConfig(responseMimeType: 'application/json'),
+        generationConfig: GenerationConfig(
+          responseMimeType: 'application/json',
+        ),
       );
 
       final prompt = TextPart("""
-        You are an expert bill/receipt analyzer. Analyze this image carefully
-        and extract the following into JSON.
+  You are an expert bill/receipt analyzer. Analyze this image carefully
+  and extract the following into JSON.
 
-        RULES (follow strictly):
-        1. merchant — The exact name of the shop, company, app, or service.
-        2. date     — Format: Month Day only (e.g. "March 18"). If not visible, return "".
-        3. amount   — The final TOTAL amount as a plain number string (e.g. "485").
-                      Do NOT include ₹ or Rs symbol. Just the number.
-        4. category — You MUST return ONLY one of these exact category names:
-                      Food, Travel, Supplies, Bills, Entertainment, Medical,
-                      Education, Rent, Petrol, Electricity, Home Services
-                      IMPORTANT RULES:
-                      - Petrol/fuel/diesel stations → return 'Petrol'
-                      - Electricity/power/EB/BESCOM/TNEB/MSEB bills → return 'Electricity'
-                      - Plumber/electrician/carpenter/cleaning/Urban Company → return 'Home Services'
-                      - Medical/pharmacy/hospital/clinic → return 'Medical'
-                      - Grocery/supermarket/BigBasket/Zepto/DMart → return 'Supplies'
-                      - Internet/WiFi/broadband/Jio/Airtel/phone bill → return 'Bills'
-                      - Restaurant/food delivery/Swiggy/Zomato → return 'Food'
-                      - Flight/train/bus/cab/Ola/Uber (NOT petrol) → return 'Travel'
-                      - Amazon/Flipkart/shopping/clothes → return 'Supplies'
-                      - Netflix/OTT/cinema/PVR → return 'Entertainment'
-                      - School/college/tuition/course → return 'Education'
-                      - House rent/hostel → return 'Rent'
-                      - If nothing matches clearly, return 'Bills'
-        5. confidence — A number 1-100 showing how confident you are.
+  RULES (follow strictly):
+  1. merchant — The exact name of the shop, company, app, or service.
+  2. date     — Extract the INVOICE DATE or BILL DATE as "Month Day Year" 
+                (e.g. "January 19 2024"). 
+                Indian bills may show dates as "19-Jan-2024", "19/01/2024", 
+                "Jan 19, 2024" — always convert to "Month Day Year" format.
+                ALWAYS include the year. If year is truly not visible, use current year.
+                Never return just "Month Day" without a year.
+  3. amount   — The final TOTAL amount as a plain number string (e.g. "485").
+                Do NOT include ₹ or Rs symbol. Just the number.
+  4. category — You MUST return ONLY one of these exact category names:
+                Food, Travel, Supplies, Bills, Entertainment, Medical,
+                Education, Rent, Petrol, Electricity, Home Services
+                IMPORTANT RULES:
+                - Petrol/fuel/diesel stations → return 'Petrol'
+                - Electricity/power/EB/BESCOM/TNEB/MSEB bills → return 'Electricity'
+                - Plumber/electrician/carpenter/cleaning/Urban Company → return 'Home Services'
+                - Medical/pharmacy/hospital/clinic → return 'Medical'
+                - Grocery/supermarket/BigBasket/Zepto/DMart → return 'Supplies'
+                - Internet/WiFi/broadband/Jio/Airtel/phone bill → return 'Bills'
+                - Restaurant/food delivery/Swiggy/Zomato → return 'Food'
+                - Flight/train/bus/cab/Ola/Uber/travel agency (NOT petrol) → return 'Travel'
+                - Amazon/Flipkart/shopping/clothes → return 'Supplies'
+                - Netflix/OTT/cinema/PVR → return 'Entertainment'
+                - School/college/tuition/course → return 'Education'
+                - House rent/hostel → return 'Rent'
+                - If nothing matches clearly, return 'Bills'
+  5. confidence — A number 1-100 showing how confident you are.
 
-        Return ONLY valid JSON like:
-        {"merchant":"Bharat Petroleum","date":"March 18","amount":"485","category":"Petrol","confidence":98}
+  Return ONLY valid JSON like:
+  {"merchant":"Happy Holidays","date":"January 19 2024","amount":"29310","category":"Travel","confidence":98}
 
-        No markdown, no explanation, no extra text. Just the JSON.
-      """);
+  No markdown, no explanation, no extra text. Just the JSON.
+""");
 
       final response = await model.generateContent([
         Content.multi([prompt, DataPart(mimeType, imageBytes)]),
@@ -616,11 +743,11 @@ class _AddExpensePageState extends State<AddExpensePage>
         final rawJson = jsonDecode(response.text!) as Map<String, dynamic>;
         final data = ScannedReceipt.fromJson(rawJson);
 
-        // ── Merchant override: Apollo → Medical, BMTC → Travel, etc. ──────
-        // The AI may mis-classify known merchants. Always check the merchant
-        // name against our lookup table and use that result first.
         final aiFormattedCategory = _formatCategory(data.category);
-        final overriddenCategory  = _resolveCategoryFromMerchant(data.merchant, aiFormattedCategory);
+        final overriddenCategory = _resolveCategoryFromMerchant(
+          data.merchant,
+          aiFormattedCategory,
+        );
 
         _autoAddCategoryIfNew(overriddenCategory, data.category);
 
@@ -628,7 +755,7 @@ class _AddExpensePageState extends State<AddExpensePage>
           _scanState = ScanState.scanned;
           _scannedReceipt = data;
           _autoFilled = true;
-          _selectedCategory = overriddenCategory; // ← uses override, not raw AI output
+          _selectedCategory = overriddenCategory;
           globalScanCount += 1;
         });
 
@@ -687,7 +814,10 @@ class _AddExpensePageState extends State<AddExpensePage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Scan Receipt', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const Text(
+              'Scan Receipt',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 16),
             ListTile(
               leading: const Icon(Icons.camera_alt, color: Color(0xFF2D6A5A)),
@@ -695,7 +825,10 @@ class _AddExpensePageState extends State<AddExpensePage>
               onTap: () => Navigator.pop(context, ImageSource.camera),
             ),
             ListTile(
-              leading: const Icon(Icons.photo_library, color: Color(0xFF2D6A5A)),
+              leading: const Icon(
+                Icons.photo_library,
+                color: Color(0xFF2D6A5A),
+              ),
               title: const Text('Choose from Gallery'),
               onTap: () => Navigator.pop(context, ImageSource.gallery),
             ),
@@ -712,16 +845,37 @@ class _AddExpensePageState extends State<AddExpensePage>
     String selectedEmoji = '📌';
 
     final List<String> quickEmojis = [
-      '📌', '⛽', '🚗', '🏋️', '💈', '🐾', '🎁', '💻',
-      '🌐', '🏖️', '👕', '☕', '🛡️', '⚡', '🥦', '🎬', '🍕', '🚌',
+      '📌',
+      '⛽',
+      '🚗',
+      '🏋️',
+      '💈',
+      '🐾',
+      '🎁',
+      '💻',
+      '🌐',
+      '🏖️',
+      '👕',
+      '☕',
+      '🛡️',
+      '⚡',
+      '🥦',
+      '🎬',
+      '🍕',
+      '🚌',
     ];
 
     showDialog(
       context: context,
       builder: (_) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: const Text('Add Category', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'Add Category',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -730,15 +884,27 @@ class _AddExpensePageState extends State<AddExpensePage>
                 controller: textController,
                 decoration: InputDecoration(
                   hintText: 'e.g. Petrol, Gym, Salon...',
-                  hintStyle: const TextStyle(color: Color(0xFFB0B0B5), fontSize: 14),
+                  hintStyle: const TextStyle(
+                    color: Color(0xFFB0B0B5),
+                    fontSize: 14,
+                  ),
                   filled: true,
                   fillColor: const Color(0xFFF5F0EB),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                 ),
               ),
               const SizedBox(height: 14),
-              const Text('Pick an emoji', style: TextStyle(fontSize: 12, color: Color(0xFF8A8A8E))),
+              const Text(
+                'Pick an emoji',
+                style: TextStyle(fontSize: 12, color: Color(0xFF8A8A8E)),
+              ),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
@@ -751,11 +917,20 @@ class _AddExpensePageState extends State<AddExpensePage>
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: picked ? const Color(0xFFE8F5F0) : const Color(0xFFF5F0EB),
+                        color: picked
+                            ? const Color(0xFFE8F5F0)
+                            : const Color(0xFFF5F0EB),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: picked ? const Color(0xFF2D6A5A) : Colors.transparent, width: 1.5),
+                        border: Border.all(
+                          color: picked
+                              ? const Color(0xFF2D6A5A)
+                              : Colors.transparent,
+                          width: 1.5,
+                        ),
                       ),
-                      child: Center(child: Text(e, style: const TextStyle(fontSize: 20))),
+                      child: Center(
+                        child: Text(e, style: const TextStyle(fontSize: 20)),
+                      ),
                     ),
                   );
                 }).toList(),
@@ -765,20 +940,28 @@ class _AddExpensePageState extends State<AddExpensePage>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel', style: TextStyle(color: Color(0xFF8A8A8E))),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Color(0xFF8A8A8E)),
+              ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF2D6A5A),
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 elevation: 0,
               ),
               onPressed: () {
                 if (textController.text.trim().isNotEmpty) {
                   final newLabel = _formatCategory(textController.text.trim());
                   setState(() {
-                    _customCategories.add({'label': newLabel, 'emoji': selectedEmoji});
+                    _customCategories.add({
+                      'label': newLabel,
+                      'emoji': selectedEmoji,
+                    });
                     _selectedCategory = newLabel;
                   });
                   Navigator.pop(context);
@@ -842,7 +1025,8 @@ class _AddExpensePageState extends State<AddExpensePage>
                         const SizedBox(height: 16),
                         _buildScanningOverlay(),
                       ],
-                      if (_scanState == ScanState.scanned && _scannedReceipt != null) ...[
+                      if (_scanState == ScanState.scanned &&
+                          _scannedReceipt != null) ...[
                         const SizedBox(height: 16),
                         _buildReceiptPreview(),
                       ],
@@ -875,7 +1059,11 @@ class _AddExpensePageState extends State<AddExpensePage>
             child: Text(
               'Add Expense',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Color(0xFF1C1C1E)),
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1C1C1E),
+              ),
             ),
           ),
           const SizedBox(width: 48),
@@ -898,11 +1086,16 @@ class _AddExpensePageState extends State<AddExpensePage>
                   style: TextStyle(
                     fontSize: 36,
                     fontWeight: FontWeight.w700,
-                    color: _autoFilled ? const Color(0xFF2D6A5A) : const Color(0xFF1C1C1E),
+                    color: _autoFilled
+                        ? const Color(0xFF2D6A5A)
+                        : const Color(0xFF1C1C1E),
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text('Tap to enter amount', style: TextStyle(fontSize: 12, color: Color(0xFF8A8A8E))),
+                const Text(
+                  'Tap to enter amount',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF8A8A8E)),
+                ),
               ],
             );
           },
@@ -913,52 +1106,92 @@ class _AddExpensePageState extends State<AddExpensePage>
 
   void _showAmountInput() {
     final tempController = TextEditingController(text: _amountController.text);
+
+    // Parse existing date if set, else default to today
     DateTime selectedDate = DateTime.now();
-    // Parse existing date if set
     try {
       final parsed = DateFormat('MMMM d').parse(_dateController.text.trim());
-      selectedDate = DateTime(DateTime.now().year, parsed.month, parsed.day);
+      final year = _guessYear(parsed.month);
+      selectedDate = DateTime(year, parsed.month, parsed.day);
     } catch (_) {}
+
+    final now = DateTime.now();
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       builder: (ctx) => StatefulBuilder(
         builder: (context, setSheetState) => Padding(
-          padding: EdgeInsets.only(left: 20, right: 20, top: 24, bottom: MediaQuery.of(context).viewInsets.bottom + 24),
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Enter Amount', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              const Text(
+                'Enter Amount',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
               const SizedBox(height: 12),
               TextField(
                 controller: tempController,
                 autofocus: true,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                ],
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                ),
                 decoration: InputDecoration(
                   prefixText: '₹  ',
-                  prefixStyle: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Color(0xFF2D6A5A)),
+                  prefixStyle: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2D6A5A),
+                  ),
                   filled: true,
                   fillColor: const Color(0xFFF5F0EB),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
               // ── Date Picker ────────────────────────────────────────────
-              const Text('Date', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF8A8A8E))),
+              const Text(
+                'Date',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF8A8A8E),
+                ),
+              ),
               const SizedBox(height: 8),
               GestureDetector(
                 onTap: () async {
                   final picked = await showDatePicker(
                     context: context,
                     initialDate: selectedDate,
-                    firstDate: DateTime(DateTime.now().year - 2),
-                    lastDate: DateTime(DateTime.now().year + 1),
+                    // ✅ Dynamic: always 2 years back from current year
+                    firstDate: DateTime(now.year - 2),
+                    // ✅ Dynamic: always 1 year ahead from current year
+                    lastDate: DateTime(now.year + 1),
                     builder: (context, child) => Theme(
                       data: Theme.of(context).copyWith(
                         colorScheme: const ColorScheme.light(
@@ -966,7 +1199,10 @@ class _AddExpensePageState extends State<AddExpensePage>
                           onPrimary: Colors.white,
                           surface: Colors.white,
                           onSurface: Color(0xFF1C1C1E),
-                        ), dialogTheme: DialogThemeData(backgroundColor: Colors.white),
+                        ),
+                        dialogTheme: DialogThemeData(
+                          backgroundColor: Colors.white,
+                        ),
                       ),
                       child: child!,
                     ),
@@ -976,21 +1212,37 @@ class _AddExpensePageState extends State<AddExpensePage>
                   }
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF5F0EB),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.calendar_today_outlined, size: 18, color: Color(0xFF2D6A5A)),
+                      const Icon(
+                        Icons.calendar_today_outlined,
+                        size: 18,
+                        color: Color(0xFF2D6A5A),
+                      ),
                       const SizedBox(width: 10),
                       Text(
+                        // ✅ Show full date including year so user sees the year
                         DateFormat('MMMM d, yyyy').format(selectedDate),
-                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Color(0xFF1C1C1E)),
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF1C1C1E),
+                        ),
                       ),
                       const Spacer(),
-                      const Icon(Icons.chevron_right, size: 18, color: Color(0xFFAAAAAA)),
+                      const Icon(
+                        Icons.chevron_right,
+                        size: 18,
+                        color: Color(0xFFAAAAAA),
+                      ),
                     ],
                   ),
                 ),
@@ -1004,17 +1256,26 @@ class _AddExpensePageState extends State<AddExpensePage>
                     backgroundColor: const Color(0xFF2D6A5A),
                     foregroundColor: Colors.white,
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   onPressed: () {
                     setState(() {
                       _amountController.text = tempController.text;
-                      _dateController.text = DateFormat('MMMM d').format(selectedDate);
+                      // ✅ Store only "Month Day" for display; full date
+                      // (with correct year) is resolved at save time via _guessYear()
+                      _dateController.text = DateFormat(
+                        'MMMM d',
+                      ).format(selectedDate);
                       _autoFilled = false;
                     });
                     Navigator.pop(context);
                   },
-                  child: const Text('Done', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  child: const Text(
+                    'Done',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
                 ),
               ),
             ],
@@ -1040,11 +1301,22 @@ class _AddExpensePageState extends State<AddExpensePage>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Scan receipt to auto-fill details', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF7A5C00))),
+                  const Text(
+                    'Scan receipt to auto-fill details',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF7A5C00),
+                    ),
+                  ),
                   const SizedBox(height: 3),
                   Text(
                     'Tap to open camera — Gemini AI will extract all details!',
-                    style: TextStyle(fontSize: 11.5, color: const Color(0xFF7A5C00).withValues(alpha: 0.7), height: 1.4),
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: const Color(0xFF7A5C00).withValues(alpha: 0.7),
+                      height: 1.4,
+                    ),
                   ),
                 ],
               ),
@@ -1053,8 +1325,15 @@ class _AddExpensePageState extends State<AddExpensePage>
             Container(
               width: 42,
               height: 42,
-              decoration: BoxDecoration(color: const Color(0xFF2D6A5A), borderRadius: BorderRadius.circular(10)),
-              child: const Icon(Icons.camera_alt_outlined, color: Colors.white, size: 20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2D6A5A),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.camera_alt_outlined,
+                color: Colors.white,
+                size: 20,
+              ),
             ),
           ],
         ),
@@ -1065,12 +1344,20 @@ class _AddExpensePageState extends State<AddExpensePage>
   Widget _buildSectionLabel(String text) {
     return Text(
       text,
-      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF8A8A8E), letterSpacing: 0.2),
+      style: const TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+        color: Color(0xFF8A8A8E),
+        letterSpacing: 0.2,
+      ),
     );
   }
 
   Widget _buildCategoryRow() {
-    final List<Map<String, String>> allCategories = [..._baseCategories, ..._customCategories];
+    final List<Map<String, String>> allCategories = [
+      ..._baseCategories,
+      ..._customCategories,
+    ];
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -1088,7 +1375,9 @@ class _AddExpensePageState extends State<AddExpensePage>
                   color: isSelected ? const Color(0xFFFFEDD5) : Colors.white,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: isSelected ? const Color(0xFFE06B00).withValues(alpha: 0.4) : const Color(0xFFE5E0D8),
+                    color: isSelected
+                        ? const Color(0xFFE06B00).withValues(alpha: 0.4)
+                        : const Color(0xFFE5E0D8),
                     width: isSelected ? 1.5 : 0.8,
                   ),
                 ),
@@ -1099,7 +1388,13 @@ class _AddExpensePageState extends State<AddExpensePage>
                     const SizedBox(height: 4),
                     Text(
                       cat['label']!,
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: isSelected ? const Color(0xFFE06B00) : const Color(0xFF6E6E73)),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: isSelected
+                            ? const Color(0xFFE06B00)
+                            : const Color(0xFF6E6E73),
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
@@ -1121,9 +1416,20 @@ class _AddExpensePageState extends State<AddExpensePage>
               child: const Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.add_circle_outline, size: 22, color: Color(0xFF2D6A5A)),
+                  Icon(
+                    Icons.add_circle_outline,
+                    size: 22,
+                    color: Color(0xFF2D6A5A),
+                  ),
                   SizedBox(height: 4),
-                  Text('Add', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Color(0xFF2D6A5A))),
+                  Text(
+                    'Add',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF2D6A5A),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1135,7 +1441,11 @@ class _AddExpensePageState extends State<AddExpensePage>
 
   Widget _buildPaymentMethod() {
     final Map<String, String> labels = {
-      'UPI': '₹', 'CASH': '💵', 'CREDIT_CARD': '💳', 'DEBIT_CARD': '🏧', 'NET_BANKING': '🌐',
+      'UPI': '₹',
+      'CASH': '💵',
+      'CREDIT_CARD': '💳',
+      'DEBIT_CARD': '🏧',
+      'NET_BANKING': '🌐',
     };
     return GestureDetector(
       onTap: () => _showPaymentMethodPicker(),
@@ -1149,17 +1459,33 @@ class _AddExpensePageState extends State<AddExpensePage>
         child: Row(
           children: [
             Container(
-              width: 32, height: 32,
-              decoration: BoxDecoration(color: const Color(0xFFE8F5F0), borderRadius: BorderRadius.circular(8)),
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE8F5F0),
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: Center(
-                child: Text(labels[_selectedPaymentMethod] ?? '₹',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF2D6A5A))),
+                child: Text(
+                  labels[_selectedPaymentMethod] ?? '₹',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF2D6A5A),
+                  ),
+                ),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(_selectedPaymentMethod.replaceAll('_', ' '),
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Color(0xFF1C1C1E))),
+              child: Text(
+                _selectedPaymentMethod.replaceAll('_', ' '),
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF1C1C1E),
+                ),
+              ),
             ),
             const Icon(Icons.chevron_right, color: Color(0xFFAAAAAA), size: 20),
           ],
@@ -1171,22 +1497,38 @@ class _AddExpensePageState extends State<AddExpensePage>
   void _showPaymentMethodPicker() {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       builder: (_) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Select Payment Method', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+            const Text(
+              'Select Payment Method',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+            ),
             const SizedBox(height: 12),
-            ..._paymentMethods.map((method) => ListTile(
-              title: Text(method.replaceAll('_', ' '), style: const TextStyle(fontSize: 14)),
-              trailing: method == _selectedPaymentMethod ? const Icon(Icons.check, color: Color(0xFF2D6A5A), size: 18) : null,
-              onTap: () {
-                setState(() => _selectedPaymentMethod = method);
-                Navigator.pop(context);
-              },
-            )),
+            ..._paymentMethods.map(
+              (method) => ListTile(
+                title: Text(
+                  method.replaceAll('_', ' '),
+                  style: const TextStyle(fontSize: 14),
+                ),
+                trailing: method == _selectedPaymentMethod
+                    ? const Icon(
+                        Icons.check,
+                        color: Color(0xFF2D6A5A),
+                        size: 18,
+                      )
+                    : null,
+                onTap: () {
+                  setState(() => _selectedPaymentMethod = method);
+                  Navigator.pop(context);
+                },
+              ),
+            ),
           ],
         ),
       ),
@@ -1203,11 +1545,16 @@ class _AddExpensePageState extends State<AddExpensePage>
       ),
       child: TextField(
         controller: _merchantController,
-        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Color(0xFF1C1C1E)),
+        style: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
+          color: Color(0xFF1C1C1E),
+        ),
         decoration: const InputDecoration(
           hintText: 'e.g. Amazon, Swiggy',
           hintStyle: TextStyle(color: Color(0xFFB0B0B5), fontSize: 14),
-          border: InputBorder.none, isDense: true,
+          border: InputBorder.none,
+          isDense: true,
           contentPadding: EdgeInsets.symmetric(vertical: 12),
         ),
       ),
@@ -1217,18 +1564,22 @@ class _AddExpensePageState extends State<AddExpensePage>
   // ─── Date Picker Field ────────────────────────────────────────────────────
 
   Future<void> _pickDate() async {
-    // Parse existing date if any
+    // Parse existing date if any, with smart year guessing
     DateTime initial = DateTime.now();
     try {
       final parsed = DateFormat('MMMM d').parse(_dateController.text.trim());
-      initial = DateTime(DateTime.now().year, parsed.month, parsed.day);
+      final year = _guessYear(parsed.month);
+      initial = DateTime(year, parsed.month, parsed.day);
     } catch (_) {}
+
+    final now = DateTime.now();
 
     final picked = await showDatePicker(
       context: context,
       initialDate: initial,
-      firstDate: DateTime(DateTime.now().year - 2),
-      lastDate: DateTime(DateTime.now().year + 1),
+      // ✅ Dynamic: always relative to current year
+      firstDate: DateTime(now.year - 2),
+      lastDate: DateTime(now.year + 1),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -1237,7 +1588,8 @@ class _AddExpensePageState extends State<AddExpensePage>
               onPrimary: Colors.white,
               surface: Colors.white,
               onSurface: Color(0xFF1C1C1E),
-            ), dialogTheme: DialogThemeData(backgroundColor: Colors.white),
+            ),
+            dialogTheme: DialogThemeData(backgroundColor: Colors.white),
           ),
           child: child!,
         );
@@ -1246,6 +1598,7 @@ class _AddExpensePageState extends State<AddExpensePage>
 
     if (picked != null) {
       setState(() {
+        // Store "Month Day" for display; year is preserved via _guessYear at save time
         _dateController.text = DateFormat('MMMM d').format(picked);
       });
     }
@@ -1265,7 +1618,9 @@ class _AddExpensePageState extends State<AddExpensePage>
           children: [
             Expanded(
               child: Text(
-                _dateController.text.isEmpty ? 'e.g. April 25' : _dateController.text,
+                _dateController.text.isEmpty
+                    ? 'e.g. April 25'
+                    : _dateController.text,
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
@@ -1275,7 +1630,11 @@ class _AddExpensePageState extends State<AddExpensePage>
                 ),
               ),
             ),
-            const Icon(Icons.calendar_today_outlined, size: 18, color: Color(0xFF2D6A5A)),
+            const Icon(
+              Icons.calendar_today_outlined,
+              size: 18,
+              color: Color(0xFF2D6A5A),
+            ),
           ],
         ),
       ),
@@ -1292,11 +1651,16 @@ class _AddExpensePageState extends State<AddExpensePage>
       ),
       child: TextField(
         controller: controller,
-        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Color(0xFF1C1C1E)),
+        style: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
+          color: Color(0xFF1C1C1E),
+        ),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: const TextStyle(color: Color(0xFFB0B0B5), fontSize: 14),
-          border: InputBorder.none, isDense: true,
+          border: InputBorder.none,
+          isDense: true,
           contentPadding: const EdgeInsets.symmetric(vertical: 12),
         ),
       ),
@@ -1311,20 +1675,30 @@ class _AddExpensePageState extends State<AddExpensePage>
         decoration: BoxDecoration(
           color: const Color(0xFFE8F5F0),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: const Color(0xFF2D6A5A).withValues(alpha: 0.2)),
+          border: Border.all(
+            color: const Color(0xFF2D6A5A).withValues(alpha: 0.2),
+          ),
         ),
         child: Row(
           children: [
             Container(
-              width: 18, height: 18,
-              decoration: const BoxDecoration(color: Color(0xFF2D6A5A), shape: BoxShape.circle),
+              width: 18,
+              height: 18,
+              decoration: const BoxDecoration(
+                color: Color(0xFF2D6A5A),
+                shape: BoxShape.circle,
+              ),
               child: const Icon(Icons.check, color: Colors.white, size: 12),
             ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 '✅ Detected: $_selectedCategory  •  ₹${_scannedReceipt?.amount}',
-                style: const TextStyle(fontSize: 12, color: Color(0xFF1B5E45), fontWeight: FontWeight.w500),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF1B5E45),
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ],
@@ -1336,19 +1710,30 @@ class _AddExpensePageState extends State<AddExpensePage>
   Widget _buildScanningOverlay() {
     return Container(
       height: 130,
-      decoration: BoxDecoration(color: const Color(0xFF1C1C1E), borderRadius: BorderRadius.circular(14)),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1C1C1E),
+        borderRadius: BorderRadius.circular(14),
+      ),
       child: Stack(
         children: [
           AnimatedBuilder(
             animation: _scanAnimController,
             builder: (context, _) {
               return Positioned(
-                top: _scanAnimController.value * 120, left: 0, right: 0,
+                top: _scanAnimController.value * 120,
+                left: 0,
+                right: 0,
                 child: Container(
                   height: 2,
                   decoration: BoxDecoration(
                     color: const Color(0xFF4FD1A5).withValues(alpha: 0.8),
-                    boxShadow: [BoxShadow(color: const Color(0xFF4FD1A5).withValues(alpha: 0.4), blurRadius: 6, spreadRadius: 2)],
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4FD1A5).withValues(alpha: 0.4),
+                        blurRadius: 6,
+                        spreadRadius: 2,
+                      ),
+                    ],
                   ),
                 ),
               );
@@ -1357,13 +1742,30 @@ class _AddExpensePageState extends State<AddExpensePage>
           Center(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-              decoration: BoxDecoration(color: const Color(0xFF2D6A5A), borderRadius: BorderRadius.circular(20)),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2D6A5A),
+                borderRadius: BorderRadius.circular(20),
+              ),
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
+                  SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  ),
                   SizedBox(width: 8),
-                  Text('Gemini AI reading receipt...', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                  Text(
+                    'Scanning receipt...',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1379,22 +1781,43 @@ class _AddExpensePageState extends State<AddExpensePage>
     const size = 18.0;
     const thick = 2.5;
     return [
-      Positioned(top: 8, left: 8, child: _bracket(size, thick, color, true, true)),
-      Positioned(top: 8, right: 8, child: _bracket(size, thick, color, true, false)),
-      Positioned(bottom: 8, left: 8, child: _bracket(size, thick, color, false, true)),
-      Positioned(bottom: 8, right: 8, child: _bracket(size, thick, color, false, false)),
+      Positioned(
+        top: 8,
+        left: 8,
+        child: _bracket(size, thick, color, true, true),
+      ),
+      Positioned(
+        top: 8,
+        right: 8,
+        child: _bracket(size, thick, color, true, false),
+      ),
+      Positioned(
+        bottom: 8,
+        left: 8,
+        child: _bracket(size, thick, color, false, true),
+      ),
+      Positioned(
+        bottom: 8,
+        right: 8,
+        child: _bracket(size, thick, color, false, false),
+      ),
     ];
   }
 
   Widget _bracket(double size, double thick, Color color, bool top, bool left) {
-    return SizedBox(width: size, height: size, child: CustomPaint(painter: _BracketPainter(color, thick, top, left)));
+    return SizedBox(
+      width: size,
+      height: size,
+      child: CustomPaint(painter: _BracketPainter(color, thick, top, left)),
+    );
   }
 
   Widget _buildReceiptPreview() {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white, borderRadius: BorderRadius.circular(14),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFFE5E0D8), width: 0.8),
       ),
       child: Column(
@@ -1404,26 +1827,66 @@ class _AddExpensePageState extends State<AddExpensePage>
             children: [
               Icon(Icons.receipt_long, color: Color(0xFF2D6A5A), size: 20),
               SizedBox(width: 8),
-              Text('Scanned Receipt', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF1C1C1E))),
+              Text(
+                'Scanned Receipt',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1C1C1E),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
           const Divider(height: 1, color: Color(0xFFEEEAE2)),
           const SizedBox(height: 10),
-          ..._scannedReceipt!.lines.map((line) => Padding(
-            padding: const EdgeInsets.only(bottom: 6),
-            child: Row(
-              children: [
-                Expanded(child: Text(line.label, style: const TextStyle(fontSize: 13, color: Color(0xFF6E6E73)))),
-                Text(line.value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF1C1C1E))),
-              ],
+          ..._scannedReceipt!.lines.map(
+            (line) => Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      line.label,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF6E6E73),
+                      ),
+                    ),
+                  ),
+                  Text(
+                    line.value,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF1C1C1E),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          )),
+          ),
           const Divider(height: 16, color: Color(0xFFEEEAE2)),
           Row(
             children: [
-              const Expanded(child: Text('Total', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1C1C1E)))),
-              Text('₹ ${_scannedReceipt!.amount}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF2D6A5A))),
+              const Expanded(
+                child: Text(
+                  'Total',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1C1C1E),
+                  ),
+                ),
+              ),
+              Text(
+                '₹ ${_scannedReceipt!.amount}',
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF2D6A5A),
+                ),
+              ),
             ],
           ),
         ],
@@ -1443,13 +1906,31 @@ class _AddExpensePageState extends State<AddExpensePage>
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF2D6A5A),
             foregroundColor: Colors.white,
-            disabledBackgroundColor: const Color(0xFF2D6A5A).withValues(alpha: 0.6),
+            disabledBackgroundColor: const Color(
+              0xFF2D6A5A,
+            ).withValues(alpha: 0.6),
             elevation: 0,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
           ),
           child: _isSaving
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-              : const Text('Save Expense', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0.2)),
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Text(
+                  'Save Expense',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.2,
+                  ),
+                ),
         ),
       ),
     );
@@ -1476,17 +1957,26 @@ class _BracketPainter extends CustomPainter {
 
     final path = Path();
     if (top && left) {
-      path.moveTo(0, size.height); path.lineTo(0, 0); path.lineTo(size.width, 0);
+      path.moveTo(0, size.height);
+      path.lineTo(0, 0);
+      path.lineTo(size.width, 0);
     } else if (top && !left) {
-      path.moveTo(0, 0); path.lineTo(size.width, 0); path.lineTo(size.width, size.height);
+      path.moveTo(0, 0);
+      path.lineTo(size.width, 0);
+      path.lineTo(size.width, size.height);
     } else if (!top && left) {
-      path.moveTo(0, 0); path.lineTo(0, size.height); path.lineTo(size.width, size.height);
+      path.moveTo(0, 0);
+      path.lineTo(0, size.height);
+      path.lineTo(size.width, size.height);
     } else {
-      path.moveTo(0, size.height); path.lineTo(size.width, size.height); path.lineTo(size.width, 0);
+      path.moveTo(0, size.height);
+      path.lineTo(size.width, size.height);
+      path.lineTo(size.width, 0);
     }
     canvas.drawPath(path, paint);
   }
 
   @override
-  bool shouldRepaint(_BracketPainter old) => old.color != color || old.top != top || old.left != left;
+  bool shouldRepaint(_BracketPainter old) =>
+      old.color != color || old.top != top || old.left != left;
 }

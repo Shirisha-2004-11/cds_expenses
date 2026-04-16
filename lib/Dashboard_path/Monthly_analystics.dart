@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// lib/Dashboard_path/Monthly_analystics.dart  (UPDATED — fully dynamic)
+// lib/Dashboard_path/monthly_analystics.dart  (UPDATED — fully dynamic)
 // ─────────────────────────────────────────────────────────────────────────────
 
 import 'package:flutter/material.dart';
@@ -73,7 +73,7 @@ class _MonthlyAnalyticsCardState extends State<MonthlyAnalyticsCard> {
     final p         = _prevAmount(idx); // ✅ real previous month amount
     final diffPct   = p > 0 ? ((c - p) / p * 100).round() : 0;
     final isUp      = diffPct >= 0;
-    final prevLabel = idx > 0 ? _shortMonths[idx - 1] : _shortMonths[idx];
+    // final prevLabel = idx > 0 ? _shortMonths[idx - 1] : _shortMonths[idx];
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),

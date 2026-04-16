@@ -6,7 +6,7 @@ import 'package:web/web.dart' as web;
 import '../../constants/api_constants.dart';
 import '../../colors/app_colors.dart';
 import '../../services/auth_service.dart';
-import 'package:cds_expenses/Dashboard_path/Dashboard.dart';
+import 'package:cds_expenses/dashboard_path/dashboard.dart';
 
 class MicrosoftAuthService {
   // ── Build Microsoft OAuth URL ──────────────────────────────

@@ -9,7 +9,7 @@ import '../../widgets/common/custom_text_field.dart';
 import '../../widgets/common/primary_button.dart';
 import 'sign_up_screen.dart';
 import 'forgot_password_screen.dart';
-import '../../Dashboard_path/Dashboard.dart';
+import '../../dashboard_path/dashboard.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});

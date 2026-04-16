@@ -1,7 +1,3 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// lib/Dashboard_path/Expenses_History.dart  (UPDATED — fully dynamic)
-// ─────────────────────────────────────────────────────────────────────────────
-
 import 'package:flutter/material.dart';
 import '../services/expense_provider.dart';
 
@@ -188,8 +184,8 @@ class _ExpenseTile extends StatelessWidget {
                     const SizedBox(width: 6),
                     if (entryLabel.isNotEmpty)
                       Text(entryLabel, style: const TextStyle(fontSize: 11, color: Colors.grey)),
-                    if (billLabel.isNotEmpty)
-                      Text(billLabel, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                    // if (billLabel.isNotEmpty)
+                    //   Text(billLabel, style: const TextStyle(fontSize: 11, color: Colors.grey)),
                     if (e.note.isNotEmpty) ...[
                       const SizedBox(width: 6),
                       Expanded(
@@ -207,12 +203,15 @@ class _ExpenseTile extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text('-₹ ${e.amount.toStringAsFixed(0)}',
+                Text('-₹ ${e.amount.toStringAsFixed(0)}',
                   style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFFE53935))),
-              Text(e.paymentMethod.replaceAll('_', ' '),
+                Text(e.paymentMethod.replaceAll('_', ' '),
                   style: const TextStyle(fontSize: 10, color: Colors.grey)),
-            ],
-          ),
+                if (billLabel.isNotEmpty)
+                  Text(billLabel.replaceFirst('· ', ''),
+                      style: const TextStyle(fontSize: 10, color: Colors.grey)),
+             ],
+      ),
         ],
       ),
     );
